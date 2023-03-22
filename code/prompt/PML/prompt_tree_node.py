@@ -3,7 +3,7 @@ import os
 import sys
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
-from keyword_enum import TagTypeEnum
+from keyword_enum import KeywordEnum
 
 
 DEFAULT_ERROR_VALUE = 2333
@@ -144,18 +144,18 @@ class LoopNode(NonTerminalNode):
         self.end_index:Optional[int] = None
 
 
-def find_outer_paired_loop_end_index(decomposed_lst:list[tuple[TagTypeEnum, str]]):
+def find_outer_paired_loop_end_index(decomposed_lst:list[tuple[KeywordEnum, str]]):
     loop_stack = []
     for index, (keyword_type, text) in enumerate(decomposed_lst):
-        if keyword_type == TagTypeEnum.LoopStart:
+        if keyword_type == KeywordEnum.LoopStart:
             loop_stack.append(text)
-        elif keyword_type == TagTypeEnum.LoopEnd:
+        elif keyword_type == KeywordEnum.LoopEnd:
             loop_stack.pop()
             if len(loop_stack) == 0:
                 return index
     return -1
     
-def parse_children(node:NonTerminalNode, children_list:list[tuple[TagTypeEnum, str]]):
+def parse_children(node:NonTerminalNode, children_list:list[tuple[KeywordEnum, str]]):
     if not isinstance(node, NonTerminalNode):
         return
     skips_index:list = []
@@ -163,20 +163,20 @@ def parse_children(node:NonTerminalNode, children_list:list[tuple[TagTypeEnum, s
         if index in skips_index:
             continue
         # Skip the loop end keyword
-        if keyword_type == TagTypeEnum.LoopEnd:
+        if keyword_type == KeywordEnum.LoopEnd:
             continue
-        elif keyword_type == TagTypeEnum.Data:
+        elif keyword_type == KeywordEnum.Data:
             child_node = DataNode(father=node, text_or_path=text)
-        elif keyword_type == TagTypeEnum.PlainText:
+        elif keyword_type == KeywordEnum.PlainText:
             child_node = PlainTextNode(father=node, text_or_path=text)
-        elif keyword_type == TagTypeEnum.Calculation:
+        elif keyword_type == KeywordEnum.Calculation:
             child_node = CalculationNode(father=node, expression=text)
-        elif keyword_type == TagTypeEnum.Assignment:
+        elif keyword_type == KeywordEnum.Assignment:
             child_node = AssignmentNode(father=node, assignment_expression=text)
-        elif keyword_type == TagTypeEnum.LoopStart:
+        elif keyword_type == KeywordEnum.LoopStart:
             child_node = LoopNode(father=node, text_or_path=text)
         node.children.append(child_node)
-        if keyword_type == TagTypeEnum.LoopStart:
+        if keyword_type == KeywordEnum.LoopStart:
             loop_end_index = find_outer_paired_loop_end_index(children_list)
             skips_index.extend(range(index, loop_end_index+1))
             parse_children(child_node, children_list[index+1:loop_end_index])

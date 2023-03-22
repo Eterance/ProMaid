@@ -5,10 +5,15 @@ ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 
 
-class TagTypeEnum(Enum):
-    Data:str = "DATA"
-    LoopStart:str = "LOOP-START"
-    LoopEnd:str = "LOOP-END"
-    PlainText:str = "PLAIN-TEXT"
-    Calculation:str = "CALC"
-    Assignment:str = "ASSIGN"
+class KeywordEnum(Enum):
+    Data:str = "data"
+    LoopStart:str = "loop"
+    LoopEnd:str = "end"
+    PlainText:str = "text"
+    Calculation:str = "calc"
+    Assignment:str = "var"
+    
+class ReservedWordEnum(Enum):
+    Index:str = "index"
+    Reverse:str = "reverse"
+    Len:str = "len"
