@@ -12,6 +12,7 @@ class KeywordEnum(Enum):
     PlainText:str = "text"
     Calculation:str = "calc"
     Assignment:str = "var"
+    Comment:str = "#"
     
 class ReservedWordEnum(Enum):
     Index:str = "index"

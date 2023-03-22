@@ -23,11 +23,13 @@ class PmlParser():
     
     LENGTH_PATTERN:str = f"{ReservedWordEnum.Len.value}\(.*?\)"
     
-    def __init__(self, template:str) -> None:
+    def __init__(self, template:str, is_clean_whitespace_at_the_end_of_lines:bool=False) -> None:
         self._original_template:str = template
-        self._template:str = self._remove_comments(template)
-        self.template_tree = self._parse_syntax_tree()
+        #self._template:str = self._remove_comments(template)
+        self._template:str = template
         self._global_variable_dict:dict[str, Union[int, float]] = {}
+        self._is_clean_whitespace = is_clean_whitespace_at_the_end_of_lines
+        self.template_tree = self._parse_syntax_tree()
         
     @property
     def template(self):
@@ -48,7 +50,9 @@ class PmlParser():
             KeywordEnum: Indicate the type of the tag.
             str: The path of the tag. If the tag is a single keyword, the path will be None. If it is a plain text rather a tag, the path will be the plain text.
         """
-        if (match := re.match(self.KEYWORD_WITH_PATH_PATTERN, tag)) is not None:
+        if tag.strip().startswith(KeywordEnum.Comment.value):
+            return KeywordEnum.Comment, tag
+        elif (match := re.match(self.KEYWORD_WITH_PATH_PATTERN, tag)) is not None:
             keyword = match.group(1)
             path = match.group(2)
             if keyword == KeywordEnum.Data.value:
@@ -81,26 +85,28 @@ class PmlParser():
     
     def _template_tokenize(self, template:str):
         # 匹配所有的标签，以及它们前后的文本
-        pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}'
+        pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}|[ \f\r\t\v]*#.*?$\n'
         processing = template
         result:list[str] = []
         while(True):
             # 使用正则表达式匹配所有的标签和文本
-            matches = re.findall(pattern, processing)
+            matches = re.findall(pattern, processing, flags=re.MULTILINE)
             if len(matches) == 0:
                 result.append(processing)
                 break
             split_tag = matches[0]
             
             splits = processing.split(split_tag, 1)
-            result.append(splits[0])
+            if splits[0] != '':
+                result.append(splits[0])
             result.append(split_tag)
             processing = splits[1]
         return result
     
-    def _preprocess_invisible_keywords(self, words_list:list[str]):
-        for index, word in enumerate(words_list):
-            word_type, _ = self._decompose_tag_as_keyword_and_path(word)
+    def _preprocess_invisible_keywords(self, words_list:list[dict[str, int|str]]):
+        for index, pack_dict in enumerate(words_list):
+            line_number = pack_dict['line']
+            word_type, _ = self._decompose_tag_as_keyword_and_path(pack_dict['word'])
             # loop-start, TagTypeEnum.LoopEnd, assignment will not appear in the prompt, called invisible keywords
             # They always appear as single line, so we need to remove the \n after them
             if word_type in [KeywordEnum.LoopStart, KeywordEnum.LoopEnd, KeywordEnum.Assignment]: 
@@ -108,9 +114,27 @@ class PmlParser():
                 if index == len(words_list)-1:
                     continue
                 else:
-                    if words_list[index+1][0] == '\n':
-                        words_list[index+1] = words_list[index+1][1:]
-                        
+                    if words_list[index+1]['word'][0] == '\n':
+                        words_list[index+1]['word'] = words_list[index+1]['word'][1:]
+            elif word_type == KeywordEnum.Comment:
+                if index == len(words_list)-1 or index == 0:
+                    continue
+                else:
+                    # Comment behinds a sentence rather than stay at a single line alone
+                    # Give the white space before the comment to the previous word
+                    # and give the \n after the comment back to the previous word
+                    if words_list[index-1]['word'][-1] != '\n':
+                        if not words_list[index]['word'].startswith(KeywordEnum.Comment.value):
+                            words_list[index-1]['word'] = words_list[index-1]['word'] + words_list[index]['word'].split(KeywordEnum.Comment.value)[0]
+                        words_list[index-1]['word'] = words_list[index-1]['word'] + '\n'
+                        words_list[index]['word'] = words_list[index]['word'].strip()
+    
+    def _clean_whitespace_at_the_end_of_lines(word_list_with_line_number:list[dict[str, int|str]]):
+        for index, pack_dict in enumerate(word_list_with_line_number):
+            word = pack_dict['word']
+            if word.endswith('\n'):
+                pack_dict['word'] = word.rstrip() + '\n'
+    
     def _get_data_via_path(self, path:str, data, index:int):
         path_list = path.split('.')
         for path in path_list:
@@ -186,7 +210,7 @@ class PmlParser():
                     tree.children.pop(child_index)
                     # Copy len(loop_list) times, and insert them into the tree to replace the loop_start node
                     for loop_index, loop_item in enumerate(loop_list):
-                        _empty_node = EmptyNode()
+                        _empty_node = EmptyNode(line_number=current_child.line_number)
                         _empty_node.children = copy.deepcopy(current_child.children)
                         _empty_node.father = tree
                         # Give a new father to all children
@@ -273,10 +297,33 @@ class PmlParser():
             expression_copy = expression_copy.replace(match, str(length))
         return expression_copy
     
+    def _mark_line_number(self, word_list:list[str]):
+        line_number = 1
+        result:list[dict[str, int|str]] = []
+        for index, word in enumerate(word_list):
+            word_copy = copy.deepcopy(word)
+            old_line_number = line_number
+            # if a word starts with '\n', its line number should be counted after these '\n'
+            while (word_copy.startswith('\n')):
+                line_number += 1
+                word_copy = word_copy[1:]
+                # if this word is all '\n', we go back to the old line number, equal to the previous word
+                if word_copy == '':
+                    line_number = old_line_number
+                    word_copy = word
+                    break
+            result.append({"line": line_number, "word": word})
+            line_number += word_copy.count('\n')
+        return result
+    
     def _parse_syntax_tree(self):
-        word_list = self._template_tokenize(self._template)
-        self._preprocess_invisible_keywords(word_list)
-        decomposed_word_list:list[tuple[KeywordEnum, str|None]] = [self._decompose_tag_as_keyword_and_path(word) for word in word_list]
+        word_list:list[str] = self._template_tokenize(self._template)
+        word_list_with_line_number:list[dict[str, int|str]] = self._mark_line_number(word_list)
+        self._preprocess_invisible_keywords(word_list_with_line_number)
+        if self._is_clean_whitespace:
+            self._clean_whitespace_at_the_end_of_lines(word_list_with_line_number)
+        decomposed_word_list:list[tuple[int, tuple[KeywordEnum, str|None]]] = \
+            [(pack['line'], self._decompose_tag_as_keyword_and_path(pack['word'])) for pack in word_list_with_line_number]
         root_node = EmptyNode()
         parse_children(root_node, decomposed_word_list)        
         return root_node

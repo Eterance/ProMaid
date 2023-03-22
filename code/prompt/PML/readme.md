@@ -143,7 +143,7 @@ prompt = apb.build_prompt(incontext_samples=incontext_samples, query_samples=que
 
 ## PML Parser 构建 Prompt 的流程
 
-1. 构造函数 `AdvancedPromptBuilder()` 输入 PML ，去掉单行注释，然后分词并获取每一块词语的类型。
+1. 构造函数 `AdvancedPromptBuilder()` 输入 PML ，分词并判断每一块片段的类型。
 2. 构造语法树。
 3. `AdvancedPromptBuilder.build_prompt()` 输入数据，前序遍历语法树，为每个非空结点填充对应的数据。
 4. 数据填充完成后，前序遍历所有非终结符，得到 Prompt。
