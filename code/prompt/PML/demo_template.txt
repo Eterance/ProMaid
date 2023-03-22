@@ -1,0 +1,16 @@
+-- Answer the following questions about the code snippet below.
+# Let's try it!
+
+{ASSIGN:count=1}
+{LOOP-START:incontext_samples}
+-- Question {CALC:INDEX+1}
+
+Question: Write a {DATA:~.lang} program that prints "Hello World!" to the console.
+Code: {DATA:~.code}
+
+{ASSIGN:count+=1}
+{LOOP-END}
+-- Question {CALC:count}
+
+Question: Write a {DATA:query_samples.lang} program that prints "Hello World!" to the console.
+Code:
