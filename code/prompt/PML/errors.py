@@ -1,8 +1,5 @@
 
 
-from pyparsing import Optional
-
-
 class PMLBaseException(Exception):
     """Base class for all PML exceptions."""
     def __init__(self, line_number:int):

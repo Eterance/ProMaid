@@ -5,7 +5,7 @@ import sys
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum
-from prompt.PML.errors import LoopKeywordUnpairedError
+from errors import LoopKeywordUnpairedError
 
 
 DEFAULT_ERROR_VALUE = 2333
