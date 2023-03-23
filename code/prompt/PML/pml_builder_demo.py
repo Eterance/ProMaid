@@ -39,6 +39,6 @@ prompt += f"Code:"
 #print(prompt)
 
 template:str = open(r"demo_template.txt", 'r', encoding='utf-8').read()
-apb = PmlParser(template, is_clean_whitespace_at_the_end_of_lines=True)
+apb = PmlParser(template)
 prompt = apb.build_prompt(incontext_samples=incontext_samples, query_samples=query_samples)
 print(prompt)

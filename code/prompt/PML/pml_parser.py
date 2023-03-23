@@ -25,10 +25,13 @@ class PmlParser():
     
     LENGTH_PATTERN:str = f"{ReservedWordEnum.Len.value}\(.*?\)"
     
-    def __init__(self, template:str, is_clean_whitespace_at_the_end_of_lines:bool=False) -> None:
+    def __init__(self, template:str=None, template_path:str=None, is_clean_whitespace_at_the_end_of_lines:bool=False) -> None:
         self._original_template:str = template
-        #self._template:str = self._remove_comments(template)
         self._template:str = template
+        if template_path is not None:
+            self.template:str = open(template_path, 'r', encoding='utf-8').read()
+        if self._template is None:
+            raise ValueError("Template cannot be None.")
         self._global_variable_dict:dict[str, Union[int, float]] = {}
         self._is_clean_whitespace = is_clean_whitespace_at_the_end_of_lines
         self.template_tree = self._parse_syntax_tree()
@@ -75,15 +78,6 @@ class PmlParser():
                 return KeywordEnum.PlainText, tag
         else:
             return KeywordEnum.PlainText, tag
-        
-    def _remove_comments(self, template: str) -> str:
-        lines = template.split("\n")
-        new_lines = []
-        for line in lines:
-            if line.lstrip().startswith("#"):
-                continue
-            new_lines.append(line)
-        return "\n".join(new_lines)
     
     def _template_tokenize(self, template:str):
         # 匹配所有的标签，以及它们前后的文本
