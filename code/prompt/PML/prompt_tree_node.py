@@ -1,9 +1,11 @@
 from typing import Optional, Union
 import os
 import sys
+
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum
+from prompt.PML.errors import LoopKeywordUnpairedError
 
 
 DEFAULT_ERROR_VALUE = 2333
@@ -152,16 +154,25 @@ class CommentNode(TerminalNode):
     def PromptString(self):
         return ""
     
-def find_outer_paired_loop_end_index(decomposed_lst:list[tuple[KeywordEnum, str]]):
-    loop_stack = []
-    for index, (line_number, (keyword_type, text)) in enumerate(decomposed_lst):
+def find_outer_paired_loop_end_index(decomposed_lst:list[tuple[int, tuple[KeywordEnum, str]]]):
+    loop_start_stack:list[tuple[int, tuple[KeywordEnum, str]]] = []
+    found_index = -1
+    for index, element in enumerate(decomposed_lst):
+        (line_number, (keyword_type, text)) = element
         if keyword_type == KeywordEnum.LoopStart:
-            loop_stack.append(text)
+            loop_start_stack.append(element)
         elif keyword_type == KeywordEnum.LoopEnd:
-            loop_stack.pop()
-            if len(loop_stack) == 0:
-                return index
-    return -1
+            if len(loop_start_stack) == 0:
+                raise LoopKeywordUnpairedError(line_number, '{'+KeywordEnum.LoopEnd.value+'}')
+            else:
+                loop_start_stack.pop()
+            if len(loop_start_stack) == 0:
+                found_index = index
+    if len(loop_start_stack) != 0:
+        line_number = loop_start_stack[0][0]
+        text = loop_start_stack[0][1][1]
+        raise LoopKeywordUnpairedError(line_number, '{'+f"{KeywordEnum.LoopStart.value}:{text}"+'}')
+    return found_index
     
 def parse_children(node:NonTerminalNode, children_list:list[tuple[int, tuple[KeywordEnum, str]]]):
     if not isinstance(node, NonTerminalNode):

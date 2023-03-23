@@ -4,6 +4,8 @@ import re
 from typing import Optional, Union
 import os
 import sys
+
+from prompt.PML.errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum, ReservedWordEnum
@@ -68,7 +70,7 @@ class PmlParser():
         elif (match := re.match(self.SINGLE_KEYWORD_PATTERN, tag)) is not None:
             keyword = match.group(1)
             if keyword == KeywordEnum.LoopEnd.value:
-                return KeywordEnum.LoopEnd, None
+                return KeywordEnum.LoopEnd, ""
             else:
                 return KeywordEnum.PlainText, tag
         else:
@@ -152,21 +154,28 @@ class PmlParser():
                 new_list.append(word_dict)
         return new_list
     
-    def _get_data_via_path(self, path:str, data, index:int):
+    def _get_data_via_path(self, path:str, data, index:int, line_number:int):
+        total_path = path
+        already_found_path:list[str] = []
         path_list = path.split('.')
         for path in path_list:
+            _original_sub_path = path
             # Number-like
             if path.startswith('[') and path.endswith(']'):
                 number_like = path[1:-1]
                 if number_like == ReservedWordEnum.Index.value:
-                    assert index is not None, f"INDEX keyword can only be used in loop. Path: {path}"
+                    if index is None:
+                        raise VariableReferenceError(line_number, ReservedWordEnum.Index.value, ", maybe you used it out of the loop")
                     number_like = str(index)
+                # global variable
                 elif number_like in self._global_variable_dict.keys(): 
                     number_like = str(self._global_variable_dict[number_like])
                 try:
                     # Pure single number, like [20]
                     number = int(number_like)
                     data = data[number]
+                except IndexError as ie:
+                    raise ListOutOfIndexError(line_number, total_path, int(number_like), len(data), ".".join(already_found_path))
                 except ValueError as ve:
                     is_reverse:bool = False
                     # reverse all list, like [REVERSE_KEYWORD]
@@ -175,7 +184,7 @@ class PmlParser():
                     # list slice
                     else:
                         if ':' not in number_like:
-                            raise ValueError(f"Invalid list index: [{number_like}]")
+                            raise InvalidListIndexOrSlice(line_number, total_path, _original_sub_path, ".".join(already_found_path))
                         _split = number_like.split(":")
                         start_index_str = _split[0]
                         end_index_str = _split[1]
@@ -206,7 +215,11 @@ class PmlParser():
                 # 
                 else:
                     assert isinstance(data, dict), f"""path "{path}" is not dict"""
-                    data = data[path]
+                    try:
+                        data = data[path]
+                    except KeyError as ke:
+                        raise PathNotFoundError(line_number, total_path, _original_sub_path, ".".join(already_found_path))
+            already_found_path.append(_original_sub_path)
         return data
     
     # Pre-order fill data to tree
@@ -219,10 +232,10 @@ class PmlParser():
                 if isinstance(current_child, LoopNode):
                     # Relative path
                     if current_child.path.startswith('~.'):
-                        loop_list = self._get_data_via_path(current_child.path[2:], current_data, index)
+                        loop_list = self._get_data_via_path(current_child.path[2:], current_data, index, current_child.line_number)
                     # Absolute path
                     else:
-                        loop_list = self._get_data_via_path(current_child.path, root_data, index)
+                        loop_list = self._get_data_via_path(current_child.path, root_data, index, current_child.line_number)
                     assert isinstance(loop_list, list), f"Loop path {current_child.path} is not a list"
                     tree.children.pop(child_index)
                     # Copy len(loop_list) times, and insert them into the tree to replace the loop_start node
@@ -241,28 +254,39 @@ class PmlParser():
                 elif isinstance(current_child, DataNode):
                     # Relative path
                     if current_child.text_or_path.startswith('~.'):
-                        data = self._get_data_via_path(current_child.text_or_path[2:], current_data, index)
+                        data = self._get_data_via_path(current_child.text_or_path[2:], current_data, index, current_child.line_number)
                     # Absolute path
                     else:
-                        data = self._get_data_via_path(current_child.text_or_path, root_data, index)
+                        data = self._get_data_via_path(current_child.text_or_path, root_data, index, current_child.line_number)
                     current_child.text_or_path = str(data)
                 elif isinstance(current_child, EmptyNode):
                     self._fill_data_to_sub_trees(current_child, current_data, root_data, index)
                 elif type(current_child) is CalculationNode:
+                    original_expression = current_child.expression
                     self._fill_calculation_node(current_child, current_data, root_data)
+                    try:
+                        current_child.evaluate()
+                    except NameError as ne:
+                        raise VariableReferenceError(current_child.line_number, ne.name)
+                    except Exception as e:
+                        raise ExpressionEvaluationUnknownExceptionError(current_child.line_number, original_expression, e)
                 elif type(current_child) is AssignmentNode:
+                    original_expression = current_child.expression
                     if current_child.variable_name == ReservedWordEnum.Index.value:
-                        raise Exception(f'"{ReservedWordEnum.Index.value}" is a read-only variable.')
+                        raise AssignReadOnlyError(current_child.line_number, ReservedWordEnum.Index.value)
                     self._fill_calculation_node(current_child, current_data, root_data)
                     # update global variable dict
                     try:
                         self._global_variable_dict[current_child.variable_name] = current_child.evaluate()
+                    except NameError as ne:
+                        raise VariableReferenceError(current_child.line_number, ne.name)
                     except Exception as e:
-                        raise Exception(f"""Variable assign Fail, maybe you use a variable which is not defined yet? Current expression: "{current_child.expression}" """)
+                        raise ExpressionEvaluationUnknownExceptionError(current_child.line_number, original_expression, e)
                 child_index += 1
                 
     def _fill_calculation_node(self, node:CalculationNode, current_data, root_data):
         # If expression has a "INDEX", Find a nearest ancestor node which has index
+        node.expression = self._process_len_in_expression(node.expression, current_data, root_data, node.line_number)
         _tokens = self._split_expression_by_operators(node.expression)
         for token in _tokens:
             if ReservedWordEnum.Index.value == token:
@@ -283,7 +307,7 @@ class PmlParser():
                 continue
             _replaced = self._replace_token_with_global_variables(token)
             _replaced_tokens.append(_replaced)
-        node.expression = self._process_len_in_expression("".join(_replaced_tokens), current_data, root_data)
+        node.expression = "".join(_replaced_tokens)
         
     def _split_expression_by_operators(self, expression:str): 
         pattern:str = r"\w+|\+|-|\*|/|%|//|\(|\)|\*\*"
@@ -298,7 +322,7 @@ class PmlParser():
                 return str(var_value)
         return token
     
-    def _process_len_in_expression(self, expression:str, current_data, root_data):
+    def _process_len_in_expression(self, expression:str, current_data, root_data, line_number:int):
         expression_copy = copy.deepcopy(expression)
         # Replace length
         matches:list[str] = re.findall(self.LENGTH_PATTERN, expression_copy)
@@ -306,10 +330,10 @@ class PmlParser():
             path = match.replace(ReservedWordEnum.Len.value, '')[1:-1]
             # Relative path
             if path.startswith('~.'):
-                _list = self._get_data_via_path(path[2:], current_data)
+                _list = self._get_data_via_path(path[2:], current_data, line_number)
             # Absolute path
             else:
-                _list = self._get_data_via_path(path, root_data)
+                _list = self._get_data_via_path(path, root_data, line_number)
             length = len(_list)
             expression_copy = expression_copy.replace(match, str(length))
         return expression_copy
