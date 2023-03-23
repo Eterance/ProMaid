@@ -129,11 +129,28 @@ class PmlParser():
                         words_list[index-1]['word'] = words_list[index-1]['word'] + '\n'
                         words_list[index]['word'] = words_list[index]['word'].strip()
     
-    def _clean_whitespace_at_the_end_of_lines(word_list_with_line_number:list[dict[str, int|str]]):
-        for index, pack_dict in enumerate(word_list_with_line_number):
-            word = pack_dict['word']
-            if word.endswith('\n'):
-                pack_dict['word'] = word.rstrip() + '\n'
+    def _clean_whitespace_at_the_end_of_lines(self, template:str):
+        result:str = ''
+        whitespace_cache:str = ''
+        while len(template) > 0:
+            char = template[0]
+            template = template[1:]
+            if char in [' ', '\f', '\t', '\v']:
+                whitespace_cache += char
+            elif char == '\n' or char == KeywordEnum.Comment.value:
+                whitespace_cache = ''
+                result += char
+            else: # char is not whitespace
+                result += whitespace_cache + char
+                whitespace_cache = ''
+        return result
+    
+    def _clean_empty_tokens(self, word_list_with_line_number:list[dict[str, int|str]]):
+        new_list = []
+        for word_dict in word_list_with_line_number:
+            if word_dict['word'] != '':
+                new_list.append(word_dict)
+        return new_list
     
     def _get_data_via_path(self, path:str, data, index:int):
         path_list = path.split('.')
@@ -317,11 +334,12 @@ class PmlParser():
         return result
     
     def _parse_syntax_tree(self):
+        if self._is_clean_whitespace:
+            self._template = self._clean_whitespace_at_the_end_of_lines(self._template)
         word_list:list[str] = self._template_tokenize(self._template)
         word_list_with_line_number:list[dict[str, int|str]] = self._mark_line_number(word_list)
         self._preprocess_invisible_keywords(word_list_with_line_number)
-        if self._is_clean_whitespace:
-            self._clean_whitespace_at_the_end_of_lines(word_list_with_line_number)
+        word_list_with_line_number = self._clean_empty_tokens(word_list_with_line_number)
         decomposed_word_list:list[tuple[int, tuple[KeywordEnum, str|None]]] = \
             [(pack['line'], self._decompose_tag_as_keyword_and_path(pack['word'])) for pack in word_list_with_line_number]
         root_node = EmptyNode()
