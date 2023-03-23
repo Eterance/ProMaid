@@ -178,7 +178,7 @@ over!
 首先要知道的是，`PmlParser.build_prompt()` 方法使用 `**data` 收集具名形参，因此如果你的 python 代码为
 
 ```python
-apb = AdvancedPromptBuilder(template)
+apb = PmlParser(template)
 prompt = apb.build_prompt(
     incontext_samples=is_data, 
     input_db=db, 
