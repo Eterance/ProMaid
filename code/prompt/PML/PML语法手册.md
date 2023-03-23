@@ -165,7 +165,7 @@ over!
 
 ### 单行注释
 
-以 `#` 开头。该行会被忽略，不会出现在最终 Prompt 中。
+以 `#` 开头。注释会被忽略，不会出现在最终 Prompt 中。
 
 ---
 
@@ -175,7 +175,7 @@ over!
 
 数据的路径用来在给定的字典结构中寻找对应的匹配。
 
-首先要知道的是，`AdvancedPromptBuilder.build_prompt()` 方法使用 `**data` 收集具名形参，因此如果你的 python 代码为
+首先要知道的是，`PmlParser.build_prompt()` 方法使用 `**data` 收集具名形参，因此如果你的 python 代码为
 
 ```python
 apb = AdvancedPromptBuilder(template)
