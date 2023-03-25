@@ -5,6 +5,8 @@ from typing import Optional, Union
 import os
 import sys
 
+from prompt.PML.errors import ImproperTypeDataInExpressionError
+
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum, ReservedWordEnum
@@ -24,6 +26,7 @@ class PmlParser():
     SINGLE_KEYWORD_PATTERN:str = f'\{LEFT_BRACE}(.*?)\{RIGHT_BRACE}'
     
     LENGTH_PATTERN:str = f"{ReservedWordEnum.Len.value}\(.*?\)"
+    DATA_PATTERN:str = f"{KeywordEnum.Data.value}\(.*?\)"
     
     def __init__(self, template:str=None, template_path:str=None, is_clean_whitespace_at_the_end_of_lines:bool=False) -> None:
         self._original_template:str = template
@@ -279,9 +282,8 @@ class PmlParser():
                 child_index += 1
                 
     def _fill_calculation_node(self, node:CalculationNode, current_data, root_data):
-        # If expression has a "INDEX", Find a nearest ancestor node which has index
-        node.expression = self._process_len_in_expression(node.expression, current_data, root_data, node.line_number)
         _tokens = self._split_expression_by_operators(node.expression)
+        # If expression has a "INDEX", Find a nearest ancestor node which has index
         for token in _tokens:
             if ReservedWordEnum.Index.value == token:
                 _nearest_ancient_index:Optional[int] = None
@@ -293,7 +295,10 @@ class PmlParser():
                     _current_ancient_node = _current_ancient_node.father
                 assert _nearest_ancient_index is not None, r"Can't find index in ancestors. Maybe you use a INDEX keyword outside of a loop?"
                 node.Index = _nearest_ancient_index
+        node.expression = self._process_len_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
+        node.expression = self._process_data_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
         # Now we got the value of index, replace the index in expression with value
+        _tokens = self._split_expression_by_operators(node.expression)
         _replaced_tokens = []
         for token in _tokens:
             if token == ReservedWordEnum.Index.value:
@@ -316,7 +321,7 @@ class PmlParser():
                 return str(var_value)
         return token
     
-    def _process_len_in_expression(self, expression:str, current_data, root_data, line_number:int):
+    def _process_len_in_expression(self, expression:str, current_data, root_data, line_number:int, index:int):
         expression_copy = copy.deepcopy(expression)
         # Replace length
         matches:list[str] = re.findall(self.LENGTH_PATTERN, expression_copy)
@@ -324,12 +329,29 @@ class PmlParser():
             path = match.replace(ReservedWordEnum.Len.value, '')[1:-1]
             # Relative path
             if path.startswith('~.'):
-                _list = self._get_data_via_path(path[2:], current_data, line_number)
+                _list = self._get_data_via_path(path[2:], current_data, index, line_number)
             # Absolute path
             else:
-                _list = self._get_data_via_path(path, root_data, line_number)
+                _list = self._get_data_via_path(path, root_data, index, line_number)
             length = len(_list)
             expression_copy = expression_copy.replace(match, str(length))
+        return expression_copy
+    
+    def _process_data_in_expression(self, expression:str, current_data, root_data, line_number:int, index:int):
+        expression_copy = copy.deepcopy(expression)
+        # Replace length
+        matches:list[str] = re.findall(self.DATA_PATTERN, expression_copy)
+        for match in matches:
+            path = match.replace(KeywordEnum.Data.value, '')[1:-1]
+            # Relative path
+            if path.startswith('~.'):
+                _data = self._get_data_via_path(path[2:], current_data, index, line_number)
+            # Absolute path
+            else:
+                _data = self._get_data_via_path(path, root_data, index, line_number)
+            if type(_data) not in [int, float, str]:
+                raise ImproperTypeDataInExpressionError(line_number, expression, match,type(_data))
+            expression_copy = expression_copy.replace(match, str(_data))
         return expression_copy
     
     def _mark_line_number(self, word_list:list[str]):
