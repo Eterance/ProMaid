@@ -32,7 +32,7 @@ class PmlParser():
         self._original_template:str = template
         self._template:str = template
         if template_path is not None:
-            self.template:str = open(template_path, 'r', encoding='utf-8').read()
+            self._template:str = open(template_path, 'r', encoding='utf-8').read()
         if self._template is None:
             raise ValueError("Template cannot be None.")
         self._global_variable_dict:dict[str, Union[int, float]] = {}
