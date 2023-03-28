@@ -1,5 +1,7 @@
 -- Answer the following questions about the code snippet below.
+# # # this is comment.
 # Let's try it!
+ # this is comment, too.
 
 {var:count=1}
 {loop:incontext_samples}

@@ -5,13 +5,12 @@ from typing import Optional, Union
 import os
 import sys
 
-from prompt.PML.errors import ImproperTypeDataInExpressionError
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum, ReservedWordEnum
 from prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, LoopNode, NonTerminalNode, parse_children
-from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError
+from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError
 
 class PmlParser():     
     LEFT_BRACE:str = '{'
@@ -28,7 +27,12 @@ class PmlParser():
     LENGTH_PATTERN:str = f"{ReservedWordEnum.Len.value}\(.*?\)"
     DATA_PATTERN:str = f"{KeywordEnum.Data.value}\(.*?\)"
     
-    def __init__(self, template:str=None, template_path:str=None, is_clean_whitespace_at_the_end_of_lines:bool=False) -> None:
+    def __init__(self, 
+                 template:str=None, 
+                 template_path:str=None, 
+                 is_clean_whitespace_at_the_end_of_lines:bool=False,
+                 is_reserve_comments:bool=False
+                 ) -> None:
         self._original_template:str = template
         self._template:str = template
         if template_path is not None:
@@ -37,6 +41,7 @@ class PmlParser():
             raise ValueError("Template cannot be None.")
         self._global_variable_dict:dict[str, Union[int, float]] = {}
         self._is_clean_whitespace = is_clean_whitespace_at_the_end_of_lines
+        self._is_reserve_comments = is_reserve_comments
         self.template_tree = self._parse_syntax_tree()
         
     @property
@@ -58,9 +63,9 @@ class PmlParser():
             KeywordEnum: Indicate the type of the tag.
             str: The path of the tag. If the tag is a single keyword, the path will be None. If it is a plain text rather a tag, the path will be the plain text.
         """
-        if tag.strip().startswith(KeywordEnum.Comment.value):
+        if not self._is_reserve_comments and tag.strip().startswith(KeywordEnum.Comment.value):
             return KeywordEnum.Comment, tag
-        elif (match := re.match(self.KEYWORD_WITH_PATH_PATTERN, tag)) is not None:
+        if (match := re.match(self.KEYWORD_WITH_PATH_PATTERN, tag)) is not None:
             keyword = match.group(1)
             path = match.group(2)
             if keyword == KeywordEnum.Data.value:
@@ -84,7 +89,10 @@ class PmlParser():
     
     def _template_tokenize(self, template:str):
         # 匹配所有的标签，以及它们前后的文本
-        pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}|[ \f\r\t\v]*#.*?$\n'
+        if self._is_reserve_comments:
+            pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}'
+        else:
+            pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}|[ \f\r\t\v]*#.*?$\n'
         processing = template
         result:list[str] = []
         while(True):
