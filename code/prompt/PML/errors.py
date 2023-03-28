@@ -84,6 +84,15 @@ class PathNotFoundError(SematicError):
     def Message(self):
         return f'{self.__class__.__name__} at Line {self.line_number}: Path "{self._total_path}" not found, error path "{self._error_path}", already found path "{self._already_found_path}"'
     
+class LoopPathNotListError(SematicError):
+    def __init__(self, line_number:int, total_path:str):
+        super().__init__(line_number)
+        self._total_path = total_path
+        
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at Line {self.line_number}: Using loop keyword on path "{self._total_path}", but the path is not a list'
+    
 class InvalidListIndexOrSlice(PathNotFoundError):
     pass
     

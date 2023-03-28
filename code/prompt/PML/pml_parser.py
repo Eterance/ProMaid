@@ -10,7 +10,7 @@ ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum, ReservedWordEnum
 from prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, LoopNode, NonTerminalNode, parse_children
-from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError
+from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError, LoopPathNotListError
 
 class PmlParser():     
     LEFT_BRACE:str = '{'
@@ -241,7 +241,8 @@ class PmlParser():
                     # Absolute path
                     else:
                         loop_list = self._get_data_via_path(current_child.path, root_data, index, current_child.line_number)
-                    assert isinstance(loop_list, list), f"Loop path {current_child.path} is not a list"
+                    if not isinstance(loop_list, list):
+                        raise LoopPathNotListError(current_child.line_number, current_child.path)
                     tree.children.pop(child_index)
                     # Copy len(loop_list) times, and insert them into the tree to replace the loop_start node
                     for loop_index, loop_item in enumerate(loop_list):
