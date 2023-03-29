@@ -13,11 +13,12 @@ DEFAULT_ERROR_VALUE = 2333
 class BaseNode:
     LEFT_BRACE:str = '{'
     RIGHT_BRACE:str = '}'
-    def __init__(self, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         self.father:Optional[BaseNode] = father
         self.current_data = None
         self.index:Optional[int] = None # Only used for loop
         self.line_number:int = line_number
+        self.is_processed:bool = False # Is already filled with data
     
     @property
     def PromptString(self):
@@ -34,7 +35,7 @@ class BaseNode:
         return self.PromptString
     
 class NonTerminalNode(BaseNode):
-    def __init__(self, text_or_path:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, text_or_path:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(father, line_number)
         self.path:str = text_or_path
         self.children:list[BaseNode] = []
@@ -56,32 +57,32 @@ class NonTerminalNode(BaseNode):
         return description
 
 class TerminalNode(BaseNode):
-    def __init__(self, text_or_path:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, raw_text:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(father, line_number)
-        self.text_or_path:str = text_or_path
+        self.raw_text:str = raw_text
     
     @property
     def PromptString(self):
-        return self.text_or_path
+        return self.raw_text
     
     @property
     def DebugString(self):        
-        return f"{BaseNode.LEFT_BRACE}{self.__class__.__name__}:{self.text_or_path}{BaseNode.RIGHT_BRACE}"
+        return f"{BaseNode.LEFT_BRACE}{self.__class__.__name__}:{self.raw_text}{BaseNode.RIGHT_BRACE}"
         
 class EmptyNode(NonTerminalNode): # Used for empty Non-Terminal Node
-    def __init__(self, text_or_path:str="", father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, text_or_path:str="", father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(text_or_path, father, line_number)
         
 class DataNode(TerminalNode):
-    def __init__(self, text_or_path:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, text_or_path:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(text_or_path, father, line_number)
         
 class PlainTextNode(TerminalNode):
-    def __init__(self, text_or_path:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, text_or_path:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(text_or_path, father, line_number)
 
 class CalculationNode(TerminalNode):
-    def __init__(self, expression:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, expression:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(expression, father, line_number)
         self.expression = expression
     
@@ -102,32 +103,29 @@ class CalculationNode(TerminalNode):
             return DEFAULT_ERROR_VALUE
         return self.index
     
-    # For CalculationNode, use property "Index" , not field "index"
-    # Will replace "INDEX" in expression with "Index" when "Index" is set
     @Index.setter
     def Index(self, value):
         self.index = value
-        self.expression = self.expression.replace("INDEX", str(value))
     
     @property
-    def DebugString(self):        
+    def DebugString(self):
         return f"{BaseNode.LEFT_BRACE}{self.__class__.__name__}:={self.expression}={self.PromptString}:{BaseNode.RIGHT_BRACE}"
     
 class AssignmentNode(CalculationNode):
-    def __init__(self, assignment_expression:str, father:'BaseNode'=None, line_number:int=-1) -> None:
-        super().__init__(assignment_expression, father, line_number)
-        self.split = assignment_expression.split("+=")
+    def __init__(self, raw_text:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
+        super().__init__(raw_text, father, line_number)
+        self.split = raw_text.split("+=")
         if len(self.split) == 2:
             # is "+=", add variable name and '+' to the front of expression to change it from "+=" to "="
             self.split[1] = f"{self.split[0].strip()} + {self.split[1].strip()}"
         else:
-            self.split = assignment_expression.split("-=")
+            self.split = raw_text.split("-=")
             if len(self.split) == 2:
                 # is "-=", add variable name and '-' to the front of expression to change it from "-=" to "="
                 self.split[1] = f"{self.split[0].strip()} - {self.split[1].strip()}"
             else:
-                self.split = assignment_expression.split("=")
-        assert len(self.split) == 2, f"Assignment expression should be in format of 'variable_name [=, +=, -=] value', but got {assignment_expression}"
+                self.split = raw_text.split("=")
+        assert len(self.split) == 2, f"Assignment expression should be in format of 'variable_name [=, +=, -=] value', but got {raw_text}"
         self.variable_name = self.split[0].strip()
         self.expression = self.split[1].strip()
     
@@ -140,14 +138,55 @@ class AssignmentNode(CalculationNode):
     def DebugString(self):        
         return f"{BaseNode.LEFT_BRACE}{self.__class__.__name__} {self.variable_name}:={self.expression}={self.PromptString}:{BaseNode.RIGHT_BRACE}"
     
+class PrintNode(TerminalNode):
+    # Warning: Although PrintNode has DataNode, CalculationNode and AssignmentNode 's properties, it is not a subclass of them
+    # Cause multiple inheritance is confusing
+    # And unlike those Node, PrintNode's properties are not set in parsing stage
+    # Instead, they are set in data-filling stage
+    def __init__(self, raw_text:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
+        super().__init__(raw_text, father, line_number)
+        self.data_path:Optional[str] = None
+        self.expression:Optional[str] = None
+        self.split:Optional[str] = None
+        self.variable_name:Optional[str] = None
+        self.final_value:Optional[str] = None
+    
+    def evaluate(self):
+        if self.expression is not None:
+            result:Union[int, float] = eval(self.expression)
+        else:
+            result = DEFAULT_ERROR_VALUE
+        return result
+    
+    @property
+    def PromptString(self):
+        try:
+            return self.final_value
+        except ValueError as ve:
+            return str(DEFAULT_ERROR_VALUE)
+    
+    @property
+    def Index(self):
+        if self.index is None:
+            return DEFAULT_ERROR_VALUE
+        return self.index
+    
+    @Index.setter
+    def Index(self, value):
+        self.index = value
+    
+    @property
+    def DebugString(self):        
+        return f"{BaseNode.LEFT_BRACE}{self.__class__.__name__} (processed:{self.is_processed}):={self.raw_text}={self.PromptString}:{BaseNode.RIGHT_BRACE}"
+    
 class LoopNode(NonTerminalNode):
-    def __init__(self, text_or_path:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, text_or_path:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(text_or_path, father, line_number)
         self.start_index:Optional[int] = None
         self.end_index:Optional[int] = None
         
 class CommentNode(TerminalNode):
-    def __init__(self, comment:str, father:'BaseNode'=None, line_number:int=-1) -> None:
+    def __init__(self, comment:str, father:Optional['BaseNode']=None, line_number:int=-1) -> None:
         super().__init__(comment, father, line_number)
     
     @property
@@ -174,24 +213,27 @@ def find_outer_paired_loop_end_index(decomposed_lst:list[tuple[int, tuple[Keywor
         raise LoopKeywordUnpairedError(line_number, '{'+f"{KeywordEnum.LoopStart.value}:{text}"+'}')
     return found_index
     
-def parse_children(node:NonTerminalNode, children_list:list[tuple[int, tuple[KeywordEnum, str]]]):
+def parse_children(node:BaseNode, children_list:list[tuple[int, tuple[KeywordEnum, str]]]):
     if not isinstance(node, NonTerminalNode):
         return
+    # Only NonTerminalNode can have children
     skips_index:list = []
     for index, (line_number, (keyword_type, text)) in enumerate(children_list):
         if index in skips_index:
             continue
-        # Skip the loop end keyword
+        # Skip the loop end keyword, it will not appear in the tree
         if keyword_type == KeywordEnum.LoopEnd:
             continue
         elif keyword_type == KeywordEnum.Data:
-            child_node = DataNode(father=node, text_or_path=text, line_number=line_number)
+            child_node:BaseNode = DataNode(father=node, text_or_path=text, line_number=line_number)
         elif keyword_type == KeywordEnum.PlainText:
             child_node = PlainTextNode(father=node, text_or_path=text, line_number=line_number)
         elif keyword_type == KeywordEnum.Calculation:
             child_node = CalculationNode(father=node, expression=text, line_number=line_number)
         elif keyword_type == KeywordEnum.Assignment:
-            child_node = AssignmentNode(father=node, assignment_expression=text, line_number=line_number)
+            child_node = AssignmentNode(father=node, raw_text=text, line_number=line_number)
+        elif keyword_type == KeywordEnum.Print:
+            child_node = PrintNode(father=node, raw_text=text, line_number=line_number)
         elif keyword_type == KeywordEnum.LoopStart:
             child_node = LoopNode(father=node, text_or_path=text, line_number=line_number)
         elif keyword_type == KeywordEnum.Comment:

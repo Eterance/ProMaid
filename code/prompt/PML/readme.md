@@ -97,10 +97,10 @@ prompt += f"Code:"
 
 # 枚举 incontext_samples 里面的元素
 {loop:incontext_samples}
--- Question {calc:index+1}
+-- Question {print:index+1}
 
-Question: Write a {data:~.lang} program that prints "Hello World!" to the console.
-Code: {data:~.code}
+Question: Write a {print:data(~.lang)} program that prints "Hello World!" to the console.
+Code: {print:data(~.code)}
 
 {end}
 ```
@@ -113,16 +113,16 @@ Code: {data:~.code}
 # 定义一个全局变量 count
 {var:count=1}
 {loop:incontext_samples}
--- Question {calc:index+1}
+-- Question {print:index+1}
 
-Question: Write a {data:~.lang} program that prints "Hello World!" to the console.
-Code: {data:~.code}
+Question: Write a {print:data(~.lang)} program that prints "Hello World!" to the console.
+Code: {print:data(~.code)}
 
 {var:count+=1}
 {end}
--- Question {calc:count}
+-- Question {print:count}
 
-Question: Write a {data:query_samples.lang} program that prints "Hello World!" to the console.
+Question: Write a {print:data(query_samples.lang)} program that prints "Hello World!" to the console.
 Code:
 ```
 

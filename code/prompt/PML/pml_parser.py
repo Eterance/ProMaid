@@ -4,39 +4,23 @@ import re
 from typing import Optional, Union
 import os
 import sys
-
-
 ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
-from keyword_enum import KeywordEnum, ReservedWordEnum
-from prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, LoopNode, NonTerminalNode, parse_children
+from keyword_enum import KeywordEnum, ReservedWordEnum, TagPatternsEnum, FunctionPatternsEnum
+from prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, PrintNode, LoopNode, NonTerminalNode, parse_children
 from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError, LoopPathNotListError
 
-class PmlParser():     
-    LEFT_BRACE:str = '{'
-    RIGHT_BRACE:str = '}'
-    DATA_PATTERN:str = f'\{LEFT_BRACE}{KeywordEnum.Data.value}[:.*?]?\{RIGHT_BRACE}'
-    LOOP_START_PATTERN:str = f'\{LEFT_BRACE}({KeywordEnum.LoopStart.value}):(.*?)\{RIGHT_BRACE}'
-    LOOP_END_PATTERN:str = f'\{LEFT_BRACE}{KeywordEnum.LoopEnd.value}\{RIGHT_BRACE}[\n]?'
-    CALCULATION_PATTERN:str = f'\{LEFT_BRACE}{KeywordEnum.Calculation.value}:.*?\{RIGHT_BRACE}'
-    ASSIGN_PATTERN:str = f'\{LEFT_BRACE}{KeywordEnum.Assignment.value}:.*?\{RIGHT_BRACE}[\n]?'
-    
-    KEYWORD_WITH_PATH_PATTERN:str = f'\{LEFT_BRACE}(.*?):(.*?)\{RIGHT_BRACE}'
-    SINGLE_KEYWORD_PATTERN:str = f'\{LEFT_BRACE}(.*?)\{RIGHT_BRACE}'
-    
-    LENGTH_PATTERN:str = f"{ReservedWordEnum.Len.value}\(.*?\)"
-    DATA_PATTERN:str = f"{KeywordEnum.Data.value}\(.*?\)"
-    
+class PmlParser():
     def __init__(self, 
-                 template:str=None, 
-                 template_path:str=None, 
+                 template:Optional[str]=None, 
+                 template_path:Optional[str]=None, 
                  is_clean_whitespace_at_the_end_of_lines:bool=False,
                  is_reserve_comments:bool=False
                  ) -> None:
-        self._original_template:str = template
-        self._template:str = template
+        self._original_template:Optional[str] = template
+        self._template:Optional[str] = template
         if template_path is not None:
-            self._template:str = open(template_path, 'r', encoding='utf-8').read()
+            self._template = open(template_path, 'r', encoding='utf-8').read()
         if self._template is None:
             raise ValueError("Template cannot be None.")
         self._global_variable_dict:dict[str, Union[int, float]] = {}
@@ -65,7 +49,7 @@ class PmlParser():
         """
         if not self._is_reserve_comments and tag.strip().startswith(KeywordEnum.Comment.value):
             return KeywordEnum.Comment, tag
-        if (match := re.match(self.KEYWORD_WITH_PATH_PATTERN, tag)) is not None:
+        if (match := re.match(TagPatternsEnum.TagWithPath.value, tag)) is not None:
             keyword = match.group(1)
             path = match.group(2)
             if keyword == KeywordEnum.Data.value:
@@ -76,9 +60,11 @@ class PmlParser():
                 return KeywordEnum.Calculation, path
             elif keyword == KeywordEnum.Assignment.value:
                 return KeywordEnum.Assignment, path
+            elif keyword == KeywordEnum.Print.value:
+                return KeywordEnum.Print, path
             else:
                 return KeywordEnum.PlainText, tag
-        elif (match := re.match(self.SINGLE_KEYWORD_PATTERN, tag)) is not None:
+        elif (match := re.match(TagPatternsEnum.TagWithoutPath.value, tag)) is not None:
             keyword = match.group(1)
             if keyword == KeywordEnum.LoopEnd.value:
                 return KeywordEnum.LoopEnd, ""
@@ -90,9 +76,9 @@ class PmlParser():
     def _template_tokenize(self, template:str):
         # 匹配所有的标签，以及它们前后的文本
         if self._is_reserve_comments:
-            pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}'
+            pattern = f'\{TagPatternsEnum.LeftBrace.value}.*?\{TagPatternsEnum.RightBrace.value}'
         else:
-            pattern = f'\{PmlParser.LEFT_BRACE}.*?\{PmlParser.RIGHT_BRACE}|[ \f\r\t\v]*#.*?$\n'
+            pattern = f'\{TagPatternsEnum.LeftBrace.value}.*?\{TagPatternsEnum.RightBrace.value}|[ \f\r\t\v]*#.*?$\n'
         processing = template
         result:list[str] = []
         while(True):
@@ -111,9 +97,10 @@ class PmlParser():
         return result
     
     def _preprocess_invisible_keywords(self, words_list:list[dict[str, int|str]]):
+        new_words_list:list[dict[str, int|str]] = []
         for index, pack_dict in enumerate(words_list):
             line_number = pack_dict['line']
-            word_type, _ = self._decompose_tag_as_keyword_and_path(pack_dict['word'])
+            word_type, _ = self._decompose_tag_as_keyword_and_path(pack_dict['word']) # type: ignore
             # loop-start, TagTypeEnum.LoopEnd, assignment will not appear in the prompt, called invisible keywords
             # They always appear as single line, so we need to remove the \n after them
             if word_type in [KeywordEnum.LoopStart, KeywordEnum.LoopEnd, KeywordEnum.Assignment]: 
@@ -121,20 +108,21 @@ class PmlParser():
                 if index == len(words_list)-1:
                     continue
                 else:
-                    if words_list[index+1]['word'][0] == '\n':
-                        words_list[index+1]['word'] = words_list[index+1]['word'][1:]
+                    if words_list[index+1]['word'][0] == '\n': # type: ignore
+                        words_list[index+1]['word'] = words_list[index+1]['word'][1:] # type: ignore
             elif word_type == KeywordEnum.Comment:
                 if index == len(words_list)-1 or index == 0:
                     continue
                 else:
                     # Comment behinds a sentence rather than stay at a single line alone
-                    # Give the white space before the comment to the previous word
-                    # and give the \n after the comment back to the previous word
-                    if words_list[index-1]['word'][-1] != '\n':
-                        if not words_list[index]['word'].startswith(KeywordEnum.Comment.value):
-                            words_list[index-1]['word'] = words_list[index-1]['word'] + words_list[index]['word'].split(KeywordEnum.Comment.value)[0]
-                        words_list[index-1]['word'] = words_list[index-1]['word'] + '\n'
-                        words_list[index]['word'] = words_list[index]['word'].strip()
+                    # create a NEW word before the comment
+                    # Give the white space before the comment to this NEW word
+                    # and give the \n after the comment back to this NEW word
+                    if words_list[index-1]['word'][-1] != '\n': # type: ignore
+                        if not words_list[index]['word'].startswith(KeywordEnum.Comment.value): # type: ignore
+                            words_list[index-1]['word'] = words_list[index-1]['word'] + words_list[index]['word'].split(KeywordEnum.Comment.value)[0] # type: ignore
+                        words_list[index-1]['word'] = words_list[index-1]['word'] + '\n' # type: ignore
+                        words_list[index]['word'] = words_list[index]['word'].strip() # type: ignore
     
     def _clean_whitespace_at_the_end_of_lines(self, template:str):
         result:str = ''
@@ -159,7 +147,7 @@ class PmlParser():
                 new_list.append(word_dict)
         return new_list
     
-    def _get_data_via_path(self, path:str, data, index:int, line_number:int):
+    def _get_data_via_path(self, path:str, data, index:Optional[int], line_number:int):
         total_path = path
         already_found_path:list[str] = []
         path_list = path.split('.')
@@ -228,7 +216,7 @@ class PmlParser():
         return data
     
     # Pre-order fill data to tree
-    def _fill_data_to_sub_trees(self, tree:BaseNode, current_data, root_data, index:int=None):
+    def _fill_data_to_sub_trees(self, tree:BaseNode, current_data, root_data, index:Optional[int]=None):
         tree.current_data = current_data
         if isinstance(tree, NonTerminalNode):
             child_index = 0
@@ -243,6 +231,7 @@ class PmlParser():
                         loop_list = self._get_data_via_path(current_child.path, root_data, index, current_child.line_number)
                     if not isinstance(loop_list, list):
                         raise LoopPathNotListError(current_child.line_number, current_child.path)
+                    current_child.is_processed = True
                     tree.children.pop(child_index)
                     # Copy len(loop_list) times, and insert them into the tree to replace the loop_start node
                     for loop_index, loop_item in enumerate(loop_list):
@@ -257,21 +246,27 @@ class PmlParser():
                         child_index += 1
                         # fill sub tree data
                         self._fill_data_to_sub_trees(_empty_node, loop_item, root_data, loop_index)
+                        _empty_node.is_processed = True
+                # Deprecated
                 elif isinstance(current_child, DataNode):
                     # Relative path
-                    if current_child.text_or_path.startswith('~.'):
-                        data = self._get_data_via_path(current_child.text_or_path[2:], current_data, index, current_child.line_number)
+                    if current_child.raw_text.startswith('~.'):
+                        data = self._get_data_via_path(current_child.raw_text[2:], current_data, index, current_child.line_number)
                     # Absolute path
                     else:
-                        data = self._get_data_via_path(current_child.text_or_path, root_data, index, current_child.line_number)
-                    current_child.text_or_path = str(data)
+                        data = self._get_data_via_path(current_child.raw_text, root_data, index, current_child.line_number)
+                    current_child.raw_text = str(data)
+                    current_child.is_processed = True
                 elif isinstance(current_child, EmptyNode):
                     self._fill_data_to_sub_trees(current_child, current_data, root_data, index)
+                    current_child.is_processed = True
+                # Deprecated
                 elif type(current_child) is CalculationNode:
                     original_expression = current_child.expression
                     self._fill_calculation_node(current_child, current_data, root_data)
                     try:
                         current_child.evaluate()
+                        current_child.is_processed = True
                     except NameError as ne:
                         raise VariableReferenceError(current_child.line_number, ne.name)
                     except Exception as e:
@@ -284,14 +279,92 @@ class PmlParser():
                     # update global variable dict
                     try:
                         self._global_variable_dict[current_child.variable_name] = current_child.evaluate()
+                        current_child.is_processed = True
                     except NameError as ne:
                         raise VariableReferenceError(current_child.line_number, ne.name)
                     except Exception as e:
                         raise ExpressionEvaluationUnknownExceptionError(current_child.line_number, original_expression, e)
+                elif type(current_child) is PrintNode:
+                    current_child.raw_text = current_child.raw_text.strip()
+                    # Pure data(path)
+                    _match = re.match(FunctionPatternsEnum.Data.value, current_child.raw_text)
+                    if _match and _match.group() == current_child.raw_text:
+                        _path = _match.group().replace(KeywordEnum.Data.value, '')[1:-1]
+                        # Relative path
+                        if _path.startswith('~.'):
+                            data = self._get_data_via_path(_path[2:], current_data, index, current_child.line_number)
+                        # Absolute path
+                        else:
+                            data = self._get_data_via_path(_path, root_data, index, current_child.line_number)
+                        current_child.raw_text = str(data)
+                        current_child.final_value = str(data)
+                        current_child.is_processed = True
+                    # Assignment
+                    else:
+                        success, variable_name, expression = self._try_decompose_assignment(current_child.raw_text)
+                        if success:
+                            current_child.variable_name = variable_name
+                            current_child.expression = expression
+                            if current_child.variable_name == ReservedWordEnum.Index.value:
+                                raise AssignReadOnlyError(current_child.line_number, ReservedWordEnum.Index.value)
+                            self._fill_calculation_node(current_child, current_data, root_data)
+                            # update global variable dict
+                            try:
+                                self._global_variable_dict[current_child.variable_name] = current_child.evaluate()
+                                current_child.final_value = str(self._global_variable_dict[current_child.variable_name])
+                            except NameError as ne:
+                                raise VariableReferenceError(current_child.line_number, ne.name)
+                            except Exception as e:
+                                raise ExpressionEvaluationUnknownExceptionError(current_child.line_number, original_expression, e)
+                        # Expression
+                        else:
+                            current_child.expression = current_child.raw_text
+                            self._fill_calculation_node(current_child, current_data, root_data)
+                            try:
+                                current_child.final_value = str(current_child.evaluate())
+                            except NameError as ne:
+                                raise VariableReferenceError(current_child.line_number, ne.name)
+                            except Exception as e:
+                                raise ExpressionEvaluationUnknownExceptionError(current_child.line_number, original_expression, e)
+                    current_child.is_processed = True
                 child_index += 1
                 
-    def _fill_calculation_node(self, node:CalculationNode, current_data, root_data):
+    def _try_decompose_assignment(self, raw_text:str):
+        """
+        Try to decompose assignment expression into variable name and expression. Will change "+=" to "=" and "-=" to "="
+
+        Args:
+            raw_text (str): 
+
+        Returns:
+            decompose_success (bool): Is decompose success
+            variable_name (str): Variable name on the left side of "="
+            expression (str): expression the right side of "="
+        """
+        decompose_success = False
+        splits = raw_text.split("+=")
+        if len(splits) == 2:
+            # is "+=", add variable name and '+' to the front of expression to change it from "+=" to "="
+            splits[1] = f"{splits[0].strip()} + {splits[1].strip()}"
+            decompose_success = True
+        else:
+            splits = raw_text.split("-=")
+            if len(splits) == 2:
+                # is "-=", add variable name and '-' to the front of expression to change it from "-=" to "="
+                splits[1] = f"{splits[0].strip()} - {splits[1].strip()}"
+                decompose_success = True
+            else:
+                splits = raw_text.split("=")
+                if len(splits) == 2:                    
+                    decompose_success = True
+        if decompose_success:
+            return decompose_success, splits[0].strip(), splits[1].strip()
+        else:
+            return decompose_success, None, None
+                
+    def _process_index_in_expression(self, node:CalculationNode|PrintNode, line_number:int):
         _tokens = self._split_expression_by_operators(node.expression)
+        processed_tokens:list[str] = []
         # If expression has a "INDEX", Find a nearest ancestor node which has index
         for token in _tokens:
             if ReservedWordEnum.Index.value == token:
@@ -302,23 +375,34 @@ class PmlParser():
                         _nearest_ancient_index = _current_ancient_node.index
                         break
                     _current_ancient_node = _current_ancient_node.father
-                assert _nearest_ancient_index is not None, r"Can't find index in ancestors. Maybe you use a INDEX keyword outside of a loop?"
-                node.Index = _nearest_ancient_index
-        node.expression = self._process_len_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
-        node.expression = self._process_data_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
-        # Now we got the value of index, replace the index in expression with value
-        _tokens = self._split_expression_by_operators(node.expression)
+                if _nearest_ancient_index is None:
+                    raise VariableReferenceError(line_number, ReservedWordEnum.Index.value, f"Can't find {ReservedWordEnum.Index.value} in ancestors. Maybe you use a {ReservedWordEnum.Index.value} keyword outside of a loop?")
+                node.index = _nearest_ancient_index
+                processed_tokens.append(str(node.index))
+            else:
+                if token != "":
+                    processed_tokens.append(token)
+        node.expression = "".join(processed_tokens)
+        
+    def _process_global_variables_in_expression(self, expression:str, Index:int):
+        _tokens = self._split_expression_by_operators(expression)
         _replaced_tokens = []
         for token in _tokens:
             if token == ReservedWordEnum.Index.value:
-                _replaced_tokens.append(str(node.Index))
+                _replaced_tokens.append(str(Index))
                 continue
             _replaced = self._replace_token_with_global_variables(token)
             _replaced_tokens.append(_replaced)
-        node.expression = "".join(_replaced_tokens)
+        return "".join(_replaced_tokens)
+    
+    def _fill_calculation_node(self, node:CalculationNode|PrintNode, current_data, root_data):
+        self._process_index_in_expression(node, node.line_number)
+        node.expression = self._process_len_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
+        node.expression = self._process_data_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
+        node.expression = self._process_global_variables_in_expression(node.expression, node.Index)        
         
     def _split_expression_by_operators(self, expression:str): 
-        pattern:str = r"\w+|\+|-|\*|/|%|//|\(|\)|\*\*"
+        pattern:str = r"\w+|\+|-|\*\*|\*|/|%|//|\(|\)|.*?"
         matches:list[str] = re.findall(pattern, expression)
         return matches
         
@@ -333,7 +417,7 @@ class PmlParser():
     def _process_len_in_expression(self, expression:str, current_data, root_data, line_number:int, index:int):
         expression_copy = copy.deepcopy(expression)
         # Replace length
-        matches:list[str] = re.findall(self.LENGTH_PATTERN, expression_copy)
+        matches:list[str] = re.findall(FunctionPatternsEnum.Length.value, expression_copy)
         for match in matches:
             path = match.replace(ReservedWordEnum.Len.value, '')[1:-1]
             # Relative path
@@ -349,7 +433,7 @@ class PmlParser():
     def _process_data_in_expression(self, expression:str, current_data, root_data, line_number:int, index:int):
         expression_copy = copy.deepcopy(expression)
         # Replace length
-        matches:list[str] = re.findall(self.DATA_PATTERN, expression_copy)
+        matches:list[str] = re.findall(FunctionPatternsEnum.Data.value, expression_copy)
         for match in matches:
             path = match.replace(KeywordEnum.Data.value, '')[1:-1]
             # Relative path
