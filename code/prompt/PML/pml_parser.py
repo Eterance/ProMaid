@@ -97,8 +97,9 @@ class PmlParser():
         return result
     
     def _preprocess_invisible_keywords(self, words_list:list[dict[str, int|str]]):
-        new_words_list:list[dict[str, int|str]] = []
-        for index, pack_dict in enumerate(words_list):
+        index = 0
+        while index < len(words_list):
+            pack_dict = words_list[index]
             line_number = pack_dict['line']
             word_type, _ = self._decompose_tag_as_keyword_and_path(pack_dict['word']) # type: ignore
             # loop-start, TagTypeEnum.LoopEnd, assignment will not appear in the prompt, called invisible keywords
@@ -106,12 +107,14 @@ class PmlParser():
             if word_type in [KeywordEnum.LoopStart, KeywordEnum.LoopEnd, KeywordEnum.Assignment]: 
                 # If it is the last word, we don't need to remove the \n
                 if index == len(words_list)-1:
+                    index += 1
                     continue
                 else:
                     if words_list[index+1]['word'][0] == '\n': # type: ignore
                         words_list[index+1]['word'] = words_list[index+1]['word'][1:] # type: ignore
             elif word_type == KeywordEnum.Comment:
                 if index == len(words_list)-1 or index == 0:
+                    index += 1
                     continue
                 else:
                     # Comment behinds a sentence rather than stay at a single line alone
@@ -119,10 +122,14 @@ class PmlParser():
                     # Give the white space before the comment to this NEW word
                     # and give the \n after the comment back to this NEW word
                     if words_list[index-1]['word'][-1] != '\n': # type: ignore
+                        new_word = {'line':line_number, 'word':""} # type: ignore
+                        words_list.insert(index, new_word)
+                        index += 1
                         if not words_list[index]['word'].startswith(KeywordEnum.Comment.value): # type: ignore
                             words_list[index-1]['word'] = words_list[index-1]['word'] + words_list[index]['word'].split(KeywordEnum.Comment.value)[0] # type: ignore
                         words_list[index-1]['word'] = words_list[index-1]['word'] + '\n' # type: ignore
                         words_list[index]['word'] = words_list[index]['word'].strip() # type: ignore
+            index += 1
     
     def _clean_whitespace_at_the_end_of_lines(self, template:str):
         result:str = ''
