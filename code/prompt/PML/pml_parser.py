@@ -8,7 +8,7 @@ ROOT_DIR = os.path.join(os.path.dirname(__file__))
 sys.path.append(ROOT_DIR)
 from keyword_enum import KeywordEnum, ReservedWordEnum, TagPatternsEnum, FunctionPatternsEnum
 from prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, PrintNode, LoopNode, NonTerminalNode, parse_children
-from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError, LoopPathNotListError
+from errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError, LoopPathNotListError, ImproperTypeDataInListSliceError
 
 class PmlParser():
     def __init__(self, 
@@ -156,7 +156,9 @@ class PmlParser():
                 new_list.append(word_dict)
         return new_list
     
-    def _get_data_via_path(self, raw_path:str, node:BaseNode, current_data, root_data, index:Optional[int], line_number:int):
+    def _get_data_via_path(self, raw_path:str, node:BaseNode, current_data, root_data):
+        index = node.Index
+        line_number = node.line_number
         # Relative path
         if raw_path.startswith('~.'):
             path = raw_path[2:]
@@ -170,53 +172,57 @@ class PmlParser():
         path_list = path.split('.')
         for path in path_list:
             _original_sub_path = path
-            # Number-like
+            # Expression-like, list index or slice
             if path.startswith('[') and path.endswith(']'):
-                number_like = path[1:-1]
-                if number_like == ReservedWordEnum.Index.value:
-                    if index is None:
-                        raise VariableReferenceError(line_number, ReservedWordEnum.Index.value, ", maybe you used it out of the loop")
-                    number_like = str(index)
-                # global variable
-                elif number_like in self._global_variable_dict.keys(): 
-                    number_like = str(self._global_variable_dict[number_like])
+                is_reverse:bool = False
+                expression_like = path[1:-1]
                 try:
-                    # Pure single number, like [20]
-                    number = int(number_like)
-                    data = data[number]
-                except IndexError as ie:
-                    raise ListOutOfIndexError(line_number, total_path, int(number_like), len(data), ".".join(already_found_path))
-                except ValueError as ve:
-                    is_reverse:bool = False
-                    # reverse all list, like [REVERSE_KEYWORD]
-                    if number_like == ReservedWordEnum.Reverse.value:                        
-                        is_reverse = True
-                    # list slice
-                    else:
-                        if ':' not in number_like:
-                            raise InvalidListIndexOrSlice(line_number, total_path, _original_sub_path, ".".join(already_found_path))
-                        _split = number_like.split(":")
-                        start_index_str = _split[0]
-                        end_index_str = _split[1]
+                    # List slice
+                    if ':' in expression_like:
+                        _split = expression_like.split(":")
+                        start_index_expression = _split[0].strip()
+                        end_index_expression = _split[1].strip()
                         # left is empty, like [:3]
-                        if start_index_str == '':
-                            end_index = int(end_index_str)
+                        if start_index_expression == '':
+                            end_index = eval(self._process_expression(end_index_expression, node, current_data, root_data))
+                            if type(end_index) is not int:
+                                raise ImproperTypeDataInListSliceError(line_number, end_index_expression, end_index, raw_path, type(end_index))
                             data = data[:end_index]
                         # right is empty, like [2:]
-                        elif end_index_str == '': 
-                            start_index = int(start_index_str)
+                        elif end_index_expression == '': 
+                            start_index = eval(self._process_expression(start_index_expression, node, current_data, root_data))
+                            if type(end_index) is not int:
+                                raise ImproperTypeDataInListSliceError(line_number, start_index_expression, end_index, raw_path, type(end_index))
                             data = data[start_index:]
                         # Range, like [2:3]
-                        else:
-                            start_index = int(start_index_str)
-                            end_index = int(end_index_str)
+                        else:                        
+                            start_index = eval(self._process_expression(start_index_expression, node, current_data, root_data))
+                            if type(start_index) is not int:
+                                raise ImproperTypeDataInListSliceError(line_number, start_index_expression, start_index, raw_path, type(start_index))
+                            end_index = eval(self._process_expression(end_index_expression, node, current_data, root_data))
+                            if type(end_index) is not int:
+                                raise ImproperTypeDataInListSliceError(line_number, end_index_expression, end_index, raw_path, type(end_index))
                             # if start_index > end_index, will reverse the list
                             if start_index > end_index:
                                 start_index, end_index = end_index+1, start_index+1
                                 is_reverse = True
                             data = data[start_index:end_index]
+                    # Reverse all list, like [REVERSE_KEYWORD]
+                    elif expression_like == ReservedWordEnum.Reverse.value:                        
+                        is_reverse = True
+                    # Single Expression
+                    else:
+                        list_index = eval(self._process_expression(expression_like, node, current_data, root_data))
+                        if type(list_index) is not int:
+                            raise ImproperTypeDataInListSliceError(line_number, expression_like, list_index, raw_path, type(list_index))
+                        try:
+                            data = data[list_index]                        
+                        except IndexError as ie:
+                            raise ListOutOfIndexError(line_number, total_path, list_index, len(data), ".".join(already_found_path))
                     if is_reverse:                       
                         data = list(reversed(data))
+                except NameError as ne:
+                    raise VariableReferenceError(node.line_number, ne.name)
             # just text, means the path is a dict
             else:
                 # Empty path, meaning use the entire data
@@ -240,7 +246,7 @@ class PmlParser():
             while child_index < len(tree.children):
                 current_child = tree.children[child_index]        
                 if isinstance(current_child, LoopNode):
-                    loop_list = self._get_data_via_path(current_child.path, current_child, current_data, root_data, index, current_child.line_number)
+                    loop_list = self._get_data_via_path(current_child.path, current_child, current_data, root_data)
                     if not isinstance(loop_list, list):
                         raise LoopPathNotListError(current_child.line_number, current_child.path)
                     current_child.is_processed = True
@@ -261,7 +267,7 @@ class PmlParser():
                         _empty_node.is_processed = True
                 # Deprecated
                 elif isinstance(current_child, DataNode):
-                    data = self._get_data_via_path(current_child.raw_text, current_child, current_data, root_data, index, current_child.line_number)
+                    data = self._get_data_via_path(current_child.raw_text, current_child, current_data, root_data)
                     current_child.raw_text = str(data)
                     current_child.is_processed = True
                 elif isinstance(current_child, EmptyNode):
@@ -297,7 +303,7 @@ class PmlParser():
                     _match = re.match(FunctionPatternsEnum.Data.value, current_child.raw_text)
                     if _match and _match.group() == current_child.raw_text:
                         _path = _match.group().replace(KeywordEnum.Data.value, '')[1:-1]
-                        data = self._get_data_via_path(_path, current_child, current_data, root_data, index, current_child.line_number)
+                        data = self._get_data_via_path(_path, current_child, current_data, root_data)
                         current_child.raw_text = str(data)
                         current_child.final_value = str(data)
                         current_child.is_processed = True
@@ -363,8 +369,27 @@ class PmlParser():
             return decompose_success, splits[0].strip(), splits[1].strip()
         else:
             return decompose_success, None, None
-                
-    def _process_index_in_expression(self, expression:str, node:BaseNode, line_number:int):
+        
+    def _process_expression(self, expression:str, node:BaseNode, current_data, root_data):
+        """
+        Process variable reference and function call in expression, to make it ready for computation.
+
+        Args:
+            expression (str)
+            node (BaseNode): Node using to track index, and provide line number for error
+            current_data
+            root_data
+
+        Returns:
+            expression (str): Processed expression
+        """
+        expression, node.index = self._process_index_in_expression(expression, node)
+        expression = self._process_len_in_expression(expression, node, current_data, root_data)
+        expression = self._process_data_in_expression(expression, node, current_data, root_data)
+        expression = self._process_global_variables_in_expression(expression, node.index)
+        return expression
+    
+    def _process_index_in_expression(self, expression:str, node:BaseNode):
         _tokens = self._split_expression_by_operators(expression)
         processed_tokens:list[str] = []
         # If expression has a "INDEX", Find a nearest ancestor node which has index
@@ -379,7 +404,7 @@ class PmlParser():
                         break
                     _current_ancient_node = _current_ancient_node.father
                 if _nearest_ancient_index is None:
-                    raise VariableReferenceError(line_number, ReservedWordEnum.Index.value, f"Can't find {ReservedWordEnum.Index.value} in ancestors. Maybe you use a {ReservedWordEnum.Index.value} keyword outside of a loop?")
+                    raise VariableReferenceError(node.line_number, ReservedWordEnum.Index.value, f"Can't find {ReservedWordEnum.Index.value} in ancestors. Maybe you use a {ReservedWordEnum.Index.value} keyword outside of a loop?")
                 index = _nearest_ancient_index
                 processed_tokens.append(str(index))
             else:
@@ -398,13 +423,6 @@ class PmlParser():
             _replaced = self._replace_token_with_global_variables(token)
             _replaced_tokens.append(_replaced)
         return "".join(_replaced_tokens)
-    
-    def _process_expression(self, expression:str, node:BaseNode, current_data, root_data):
-        expression, node.index = self._process_index_in_expression(expression, node, node.line_number)
-        expression = self._process_len_in_expression(expression, node, current_data, root_data, node.line_number, node.index)
-        expression = self._process_data_in_expression(expression, node, current_data, root_data, node.line_number, node.index)
-        expression = self._process_global_variables_in_expression(expression, node.index)
-        return expression
         
     def _split_expression_by_operators(self, expression:str): 
         pattern:str = r"\w+|\+|-|\*\*|\*|/|%|//|\(|\)|.*?"
@@ -419,24 +437,28 @@ class PmlParser():
                 return str(var_value)
         return token
     
-    def _process_len_in_expression(self, expression:str, node:BaseNode, current_data, root_data, line_number:int, index:int):
+    def _process_len_in_expression(self, expression:str, node:BaseNode, current_data, root_data):
         expression_copy = copy.deepcopy(expression)
+        line_number = node.line_number
+        index = node.index
         # Replace length
         matches:list[str] = re.findall(FunctionPatternsEnum.Length.value, expression_copy)
         for match in matches:
             path = match.replace(ReservedWordEnum.Len.value, '')[1:-1]
-            _list = self._get_data_via_path(path, node, current_data, root_data, index, line_number)
+            _list = self._get_data_via_path(path, node, current_data, root_data)
             length = len(_list)
             expression_copy = expression_copy.replace(match, str(length))
         return expression_copy
     
-    def _process_data_in_expression(self, expression:str, node:BaseNode, current_data, root_data, line_number:int, index:int):
+    def _process_data_in_expression(self, expression:str, node:BaseNode, current_data, root_data):
         expression_copy = copy.deepcopy(expression)
+        line_number = node.line_number
+        index = node.index
         # Replace length
         matches:list[str] = re.findall(FunctionPatternsEnum.Data.value, expression_copy)
         for match in matches:
             path = match.replace(KeywordEnum.Data.value, '')[1:-1]
-            _data = self._get_data_via_path(path, node, current_data, root_data, index, line_number)
+            _data = self._get_data_via_path(path, node, current_data, root_data)
             if type(_data) not in [int, float, str]:
                 raise ImproperTypeDataInExpressionError(line_number, expression, match,type(_data))
             expression_copy = expression_copy.replace(match, str(_data))

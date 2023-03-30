@@ -108,14 +108,35 @@ class ListOutOfIndexError(SematicError):
     def Message(self):
         return f'{self.__class__.__name__} at Line {self.line_number}: Path "{self._total_path}" not found, {self._error_index} out of the index (total length {self._total_length}), already found path "{self._already_found_path}"'
     
+class TypeError(SematicError):
+    def __init__(self, line_number:int, expecting_types:list[str], error_type:str):
+            super().__init__(line_number)
+            self._expecting_types = expecting_types
+            self._error_type = error_type
     
-class ImproperTypeDataInExpressionError(SematicError):
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at Line {self.line_number}: Expecting type "{self._expecting_types}", but got "{self._error_type}"'
+    
+class ImproperTypeDataInExpressionError(TypeError):
     def __init__(self, line_number:int, expression:str, data_path:str, error_type:str):
-        super().__init__(line_number)
+        super().__init__(line_number, ['int', 'float', 'str'], error_type)
         self._expression = expression
         self._error_type = error_type
         self._data_path = data_path
         
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at Line {self.line_number}: Data "{self._data_path}"(type "{self._error_type}") cannot be used in expression"{self._expression}"'
+        return f'{super().Message}; Data "{self._data_path}"(type "{self._error_type}") cannot be used in expression"{self._expression}"'
+
+class ImproperTypeDataInListSliceError(TypeError):
+    def __init__(self, line_number:int, expression:str, eval_result, data_path:str, error_type:str):
+        super().__init__(line_number, ['int'], error_type)
+        self._expression = expression
+        self._error_type = error_type
+        self._data_path = data_path
+        self._eval_result = eval_result
+        
+    @property
+    def Message(self):
+        return f'{super().Message} at Line {self.line_number}: Expression "{self._expression}" evaluated to "{self._eval_result}"(Type "{self._error_type}") cannot be used in list slice "{self._data_path}"'
