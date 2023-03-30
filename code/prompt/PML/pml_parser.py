@@ -21,6 +21,8 @@ class PmlParser():
         self._template:Optional[str] = template
         if template_path is not None:
             self._template = open(template_path, 'r', encoding='utf-8').read()
+            if not template_path.endswith(".pml") and not template_path.endswith(".PML"):
+                print(f'\033[0;33;40mNotices: Although PML parser can read almost any text file, it is recommended to use the special suffix ".pml" to name template files written in PML.\033[0m\n\033[0;36;40mCurrently read: {template_path}\033[0m')
         if self._template is None:
             raise ValueError("Template cannot be None.")
         self._global_variable_dict:dict[str, Union[int, float]] = {}
