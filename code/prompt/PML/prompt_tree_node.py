@@ -19,7 +19,15 @@ class BaseNode:
         self.index:Optional[int] = None # Only used for loop
         self.line_number:int = line_number
         self.is_processed:bool = False # Is already filled with data
+        
+    @property
+    def Index(self):
+        return self.index
     
+    @Index.setter
+    def Index(self, value):
+        self.index = value
+        
     @property
     def PromptString(self):
         return ""

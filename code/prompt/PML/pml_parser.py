@@ -156,7 +156,15 @@ class PmlParser():
                 new_list.append(word_dict)
         return new_list
     
-    def _get_data_via_path(self, path:str, data, index:Optional[int], line_number:int):
+    def _get_data_via_path(self, raw_path:str, node:BaseNode, current_data, root_data, index:Optional[int], line_number:int):
+        # Relative path
+        if raw_path.startswith('~.'):
+            path = raw_path[2:]
+            data = current_data
+        # Absolute path
+        else:
+            path = raw_path
+            data = root_data
         total_path = path
         already_found_path:list[str] = []
         path_list = path.split('.')
@@ -232,12 +240,7 @@ class PmlParser():
             while child_index < len(tree.children):
                 current_child = tree.children[child_index]        
                 if isinstance(current_child, LoopNode):
-                    # Relative path
-                    if current_child.path.startswith('~.'):
-                        loop_list = self._get_data_via_path(current_child.path[2:], current_data, index, current_child.line_number)
-                    # Absolute path
-                    else:
-                        loop_list = self._get_data_via_path(current_child.path, root_data, index, current_child.line_number)
+                    loop_list = self._get_data_via_path(current_child.path, current_child, current_data, root_data, index, current_child.line_number)
                     if not isinstance(loop_list, list):
                         raise LoopPathNotListError(current_child.line_number, current_child.path)
                     current_child.is_processed = True
@@ -258,12 +261,7 @@ class PmlParser():
                         _empty_node.is_processed = True
                 # Deprecated
                 elif isinstance(current_child, DataNode):
-                    # Relative path
-                    if current_child.raw_text.startswith('~.'):
-                        data = self._get_data_via_path(current_child.raw_text[2:], current_data, index, current_child.line_number)
-                    # Absolute path
-                    else:
-                        data = self._get_data_via_path(current_child.raw_text, root_data, index, current_child.line_number)
+                    data = self._get_data_via_path(current_child.raw_text, current_child, current_data, root_data, index, current_child.line_number)
                     current_child.raw_text = str(data)
                     current_child.is_processed = True
                 elif isinstance(current_child, EmptyNode):
@@ -272,7 +270,7 @@ class PmlParser():
                 # Deprecated
                 elif type(current_child) is CalculationNode:
                     original_expression = current_child.expression
-                    self._fill_calculation_node(current_child, current_data, root_data)
+                    current_child.expression = self._process_expression(current_child.expression, current_child, current_data, root_data)
                     try:
                         current_child.evaluate()
                         current_child.is_processed = True
@@ -284,7 +282,7 @@ class PmlParser():
                     original_expression = current_child.expression
                     if current_child.variable_name == ReservedWordEnum.Index.value:
                         raise AssignReadOnlyError(current_child.line_number, ReservedWordEnum.Index.value)
-                    self._fill_calculation_node(current_child, current_data, root_data)
+                    current_child.expression = self._process_expression(current_child.expression, current_child, current_data, root_data)
                     # update global variable dict
                     try:
                         self._global_variable_dict[current_child.variable_name] = current_child.evaluate()
@@ -299,12 +297,7 @@ class PmlParser():
                     _match = re.match(FunctionPatternsEnum.Data.value, current_child.raw_text)
                     if _match and _match.group() == current_child.raw_text:
                         _path = _match.group().replace(KeywordEnum.Data.value, '')[1:-1]
-                        # Relative path
-                        if _path.startswith('~.'):
-                            data = self._get_data_via_path(_path[2:], current_data, index, current_child.line_number)
-                        # Absolute path
-                        else:
-                            data = self._get_data_via_path(_path, root_data, index, current_child.line_number)
+                        data = self._get_data_via_path(_path, current_child, current_data, root_data, index, current_child.line_number)
                         current_child.raw_text = str(data)
                         current_child.final_value = str(data)
                         current_child.is_processed = True
@@ -316,7 +309,7 @@ class PmlParser():
                             current_child.expression = expression
                             if current_child.variable_name == ReservedWordEnum.Index.value:
                                 raise AssignReadOnlyError(current_child.line_number, ReservedWordEnum.Index.value)
-                            self._fill_calculation_node(current_child, current_data, root_data)
+                            current_child.expression = self._process_expression(current_child.expression, current_child, current_data, root_data)
                             # update global variable dict
                             try:
                                 self._global_variable_dict[current_child.variable_name] = current_child.evaluate()
@@ -328,7 +321,7 @@ class PmlParser():
                         # Expression
                         else:
                             current_child.expression = current_child.raw_text
-                            self._fill_calculation_node(current_child, current_data, root_data)
+                            current_child.expression = self._process_expression(current_child.expression, current_child, current_data, root_data)
                             try:
                                 current_child.final_value = str(current_child.evaluate())
                             except NameError as ne:
@@ -371,10 +364,11 @@ class PmlParser():
         else:
             return decompose_success, None, None
                 
-    def _process_index_in_expression(self, node:CalculationNode|PrintNode, line_number:int):
-        _tokens = self._split_expression_by_operators(node.expression)
+    def _process_index_in_expression(self, expression:str, node:BaseNode, line_number:int):
+        _tokens = self._split_expression_by_operators(expression)
         processed_tokens:list[str] = []
         # If expression has a "INDEX", Find a nearest ancestor node which has index
+        index:Optional[int] = None
         for token in _tokens:
             if ReservedWordEnum.Index.value == token:
                 _nearest_ancient_index:Optional[int] = None
@@ -386,12 +380,13 @@ class PmlParser():
                     _current_ancient_node = _current_ancient_node.father
                 if _nearest_ancient_index is None:
                     raise VariableReferenceError(line_number, ReservedWordEnum.Index.value, f"Can't find {ReservedWordEnum.Index.value} in ancestors. Maybe you use a {ReservedWordEnum.Index.value} keyword outside of a loop?")
-                node.index = _nearest_ancient_index
-                processed_tokens.append(str(node.index))
+                index = _nearest_ancient_index
+                processed_tokens.append(str(index))
             else:
                 if token != "":
                     processed_tokens.append(token)
-        node.expression = "".join(processed_tokens)
+        expression = "".join(processed_tokens)
+        return expression, index
         
     def _process_global_variables_in_expression(self, expression:str, Index:int):
         _tokens = self._split_expression_by_operators(expression)
@@ -404,11 +399,12 @@ class PmlParser():
             _replaced_tokens.append(_replaced)
         return "".join(_replaced_tokens)
     
-    def _fill_calculation_node(self, node:CalculationNode|PrintNode, current_data, root_data):
-        self._process_index_in_expression(node, node.line_number)
-        node.expression = self._process_len_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
-        node.expression = self._process_data_in_expression(node.expression, current_data, root_data, node.line_number, node.Index)
-        node.expression = self._process_global_variables_in_expression(node.expression, node.Index)        
+    def _process_expression(self, expression:str, node:BaseNode, current_data, root_data):
+        expression, node.index = self._process_index_in_expression(expression, node, node.line_number)
+        expression = self._process_len_in_expression(expression, node, current_data, root_data, node.line_number, node.index)
+        expression = self._process_data_in_expression(expression, node, current_data, root_data, node.line_number, node.index)
+        expression = self._process_global_variables_in_expression(expression, node.index)
+        return expression
         
     def _split_expression_by_operators(self, expression:str): 
         pattern:str = r"\w+|\+|-|\*\*|\*|/|%|//|\(|\)|.*?"
@@ -423,34 +419,24 @@ class PmlParser():
                 return str(var_value)
         return token
     
-    def _process_len_in_expression(self, expression:str, current_data, root_data, line_number:int, index:int):
+    def _process_len_in_expression(self, expression:str, node:BaseNode, current_data, root_data, line_number:int, index:int):
         expression_copy = copy.deepcopy(expression)
         # Replace length
         matches:list[str] = re.findall(FunctionPatternsEnum.Length.value, expression_copy)
         for match in matches:
             path = match.replace(ReservedWordEnum.Len.value, '')[1:-1]
-            # Relative path
-            if path.startswith('~.'):
-                _list = self._get_data_via_path(path[2:], current_data, index, line_number)
-            # Absolute path
-            else:
-                _list = self._get_data_via_path(path, root_data, index, line_number)
+            _list = self._get_data_via_path(path, node, current_data, root_data, index, line_number)
             length = len(_list)
             expression_copy = expression_copy.replace(match, str(length))
         return expression_copy
     
-    def _process_data_in_expression(self, expression:str, current_data, root_data, line_number:int, index:int):
+    def _process_data_in_expression(self, expression:str, node:BaseNode, current_data, root_data, line_number:int, index:int):
         expression_copy = copy.deepcopy(expression)
         # Replace length
         matches:list[str] = re.findall(FunctionPatternsEnum.Data.value, expression_copy)
         for match in matches:
             path = match.replace(KeywordEnum.Data.value, '')[1:-1]
-            # Relative path
-            if path.startswith('~.'):
-                _data = self._get_data_via_path(path[2:], current_data, index, line_number)
-            # Absolute path
-            else:
-                _data = self._get_data_via_path(path, root_data, index, line_number)
+            _data = self._get_data_via_path(path, node, current_data, root_data, index, line_number)
             if type(_data) not in [int, float, str]:
                 raise ImproperTypeDataInExpressionError(line_number, expression, match,type(_data))
             expression_copy = expression_copy.replace(match, str(_data))
