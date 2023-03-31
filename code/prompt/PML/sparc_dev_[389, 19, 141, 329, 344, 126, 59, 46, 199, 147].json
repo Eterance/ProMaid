@@ -1,0 +1,2406 @@
+[
+    {
+        "database_id": "student_transcripts_tracking",
+        "interaction": [
+            {
+                "query": "SELECT first_name ,  middle_name ,  last_name FROM Students ORDER BY date_first_registered DESC LIMIT 1",
+                "utterance_toks": [
+                    "Who",
+                    "was",
+                    "the",
+                    "last",
+                    "student",
+                    "to",
+                    "register",
+                    "?",
+                    "Show",
+                    "me",
+                    "the",
+                    "first",
+                    ",",
+                    "middle",
+                    ",",
+                    "and",
+                    "last",
+                    "names",
+                    "of",
+                    "that",
+                    "student",
+                    "."
+                ],
+                "utterance": "Who was the last student to register? Show me the first, middle, and last names of that student.",
+                "sql": {
+                    "orderBy": [
+                        "desc",
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    41,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    ],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                6
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": 1,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        35,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ],
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        36,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ],
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        37,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT first_name ,  middle_name ,  last_name FROM Students ORDER BY date_first_registered ASC LIMIT 1",
+                "utterance_toks": [
+                    "Who",
+                    "was",
+                    "the",
+                    "first",
+                    "to",
+                    "register",
+                    "?"
+                ],
+                "utterance": "Who was the first to register?",
+                "sql": {
+                    "orderBy": [
+                        "asc",
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    41,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    ],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                6
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": 1,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        35,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ],
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        36,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ],
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        37,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT first_name ,  middle_name ,  last_name FROM Students ORDER BY date_first_registered ASC LIMIT 1",
+            "utterance": "Who is the first student to register? List the first name, middle name and last name."
+        },
+        "interaction_id": 15
+    },
+    {
+        "database_id": "flight_2",
+        "interaction": [
+            {
+                "query": "SELECT * FROM AIRLINES WHERE Airline  =  \"United Airlines\"",
+                "utterance_toks": [
+                    "What",
+                    "are",
+                    "the",
+                    "United",
+                    "Airlines",
+                    "flights",
+                    "?"
+                ],
+                "utterance": "What are the United Airlines flights?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    2,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"United Airlines\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT * FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T2.Airline  =  T1.uid WHERE T1.Airline  =  \"United Airlines\" AND T2.SourceAirport  =  \"AHD\"",
+                "utterance_toks": [
+                    "Which",
+                    "ones",
+                    "leave",
+                    "from",
+                    "AHD",
+                    "?"
+                ],
+                "utterance": "Which ones leave from AHD?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        10,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    1,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    2,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"United Airlines\"",
+                            null
+                        ],
+                        "and",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"AHD\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT count(*) FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T2.Airline  =  T1.uid WHERE T1.Airline  =  \"United Airlines\" AND T2.SourceAirport  =  \"AHD\"",
+                "utterance_toks": [
+                    "How",
+                    "many",
+                    "are",
+                    "there",
+                    "?"
+                ],
+                "utterance": "How many are there?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        10,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    1,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    2,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"United Airlines\"",
+                            null
+                        ],
+                        "and",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"AHD\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                3,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT count(*) FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T2.Airline  =  T1.uid WHERE T1.Airline  =  \"United Airlines\" AND T2.SourceAirport  =  \"AHD\"",
+            "utterance": "Return the number of United Airlines flights leaving from AHD Airport."
+        }
+    },
+    {
+        "database_id": "poker_player",
+        "interaction": [
+            {
+                "query": "SELECT * FROM poker_player WHERE Earnings  >  300000",
+                "utterance_toks": [
+                    "Which",
+                    "poker",
+                    "players",
+                    "have",
+                    "earnings",
+                    "higher",
+                    "than",
+                    "300000",
+                    "?"
+                ],
+                "utterance": "Which poker players have earnings higher than 300000?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            3,
+                            [
+                                0,
+                                [
+                                    0,
+                                    6,
+                                    false
+                                ],
+                                null
+                            ],
+                            300000.0,
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT T1.Name FROM people AS T1 JOIN poker_player AS T2 ON T1.People_ID  =  T2.People_ID WHERE T2.Earnings  >  300000",
+                "utterance_toks": [
+                    "What",
+                    "are",
+                    "their",
+                    "names",
+                    "?"
+                ],
+                "utterance": "What are their names?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        7,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    2,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            3,
+                            [
+                                0,
+                                [
+                                    0,
+                                    6,
+                                    false
+                                ],
+                                null
+                            ],
+                            300000.0,
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        9,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT T1.Name FROM people AS T1 JOIN poker_player AS T2 ON T1.People_ID  =  T2.People_ID WHERE T2.Earnings  >  300000",
+            "utterance": "What are the names of poker players whose earnings is higher than 300000?"
+        },
+        "interaction_id": 7
+    },
+    {
+        "database_id": "network_1",
+        "interaction": [
+            {
+                "query": "SELECT name FROM highschooler",
+                "utterance_toks": [
+                    "What",
+                    "are",
+                    "the",
+                    "names",
+                    "of",
+                    "all",
+                    "the",
+                    "high",
+                    "schoolers",
+                    "?"
+                ],
+                "utterance": "What are the names of all the high schoolers?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        2,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT T2.name, count(*) FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id",
+                "utterance_toks": [
+                    "Show",
+                    "me",
+                    "the",
+                    "number",
+                    "of",
+                    "friends",
+                    "for",
+                    "each",
+                    "one",
+                    "."
+                ],
+                "utterance": "Show me the number of friends for each one.",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        4,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    1,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [
+                        [
+                            0,
+                            4,
+                            false
+                        ]
+                    ],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        2,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ],
+                            [
+                                3,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id ORDER BY count(*) ASC LIMIT 1",
+                "utterance_toks": [
+                    "Which",
+                    "one",
+                    "has",
+                    "the",
+                    "least",
+                    "number",
+                    "of",
+                    "friends",
+                    "?"
+                ],
+                "utterance": "Which one has the least number of friends?",
+                "sql": {
+                    "orderBy": [
+                        "asc",
+                        [
+                            [
+                                0,
+                                [
+                                    3,
+                                    0,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    ],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        4,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    1,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": 1,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [
+                        [
+                            0,
+                            4,
+                            false
+                        ]
+                    ],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        2,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id ORDER BY count(*) DESC LIMIT 1",
+                "utterance_toks": [
+                    "How",
+                    "about",
+                    "the",
+                    "greatest",
+                    "?"
+                ],
+                "utterance": "How about the greatest?",
+                "sql": {
+                    "orderBy": [
+                        "desc",
+                        [
+                            [
+                                0,
+                                [
+                                    3,
+                                    0,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    ],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        4,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    1,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": 1,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [
+                        [
+                            0,
+                            4,
+                            false
+                        ]
+                    ],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        2,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id ORDER BY count(*) DESC LIMIT 1",
+            "utterance": "What is the name of the high schooler who has the greatest number of friends?"
+        },
+        "interaction_id": 4
+    },
+    {
+        "database_id": "course_teach",
+        "interaction": [
+            {
+                "query": "SELECT Name FROM teacher",
+                "utterance_toks": [
+                    "What",
+                    "is",
+                    "the",
+                    "name",
+                    "of",
+                    "each",
+                    "teacher",
+                    "?"
+                ],
+                "utterance": "What is the name of each teacher?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        5,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT Name FROM teacher ORDER BY Age ASC",
+                "utterance_toks": [
+                    "Sort",
+                    "them",
+                    "in",
+                    "ascending",
+                    "order",
+                    "of",
+                    "age",
+                    "."
+                ],
+                "utterance": "Sort them in ascending order of age.",
+                "sql": {
+                    "orderBy": [
+                        "asc",
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    6,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    ],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        5,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT Name FROM teacher ORDER BY Age ASC",
+            "utterance": "List the names of teachers in ascending order of age."
+        },
+        "interaction_id": 1
+    },
+    {
+        "database_id": "tvshow",
+        "interaction": [
+            {
+                "query": "SELECT Rating FROM TV_series WHERE Episode = \"A Love of a Lifetime\"",
+                "utterance_toks": [
+                    "Tell",
+                    "me",
+                    "the",
+                    "rating",
+                    "of",
+                    "the",
+                    "episode",
+                    "titled",
+                    "``",
+                    "A",
+                    "Love",
+                    "of",
+                    "a",
+                    "Lifetime",
+                    "''",
+                    "."
+                ],
+                "utterance": "Tell me the rating of the episode titled \"A Love of a Lifetime\".",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    11,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"A Love of a Lifetime\"",
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        13,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT Weekly_Rank FROM TV_series WHERE Episode = \"A Love of a Lifetime\"",
+                "utterance_toks": [
+                    "How",
+                    "about",
+                    "its",
+                    "weekly",
+                    "rank",
+                    "?"
+                ],
+                "utterance": "How about its weekly rank?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    11,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"A Love of a Lifetime\"",
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        17,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT T1.series_name FROM TV_Channel AS T1 JOIN TV_series AS T2 ON T1.id = T2.Channel WHERE T2.Episode = \"A Love of a Lifetime\"",
+                "utterance_toks": [
+                    "And",
+                    "What",
+                    "is",
+                    "its",
+                    "TV",
+                    "Channel",
+                    "?"
+                ],
+                "utterance": "And What is its TV Channel?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        1,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    18,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    11,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"A Love of a Lifetime\"",
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        2,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT T1.series_name FROM TV_Channel AS T1 JOIN TV_series AS T2 ON T1.id = T2.Channel WHERE T2.Episode = \"A Love of a Lifetime\";",
+            "utterance": "What is the TV Channel of TV series with Episode \"A Love of a Lifetime\"? List the TV Channel's series name."
+        },
+        "interaction_id": 8
+    },
+    {
+        "database_id": "pets_1",
+        "interaction": [
+            {
+                "query": "SELECT petid FROM pets WHERE pet_age  =  3 AND pettype  =  'cat'",
+                "utterance_toks": [
+                    "What",
+                    "is",
+                    "the",
+                    "id",
+                    "of",
+                    "the",
+                    "three-year",
+                    "old",
+                    "cat",
+                    "?"
+                ],
+                "utterance": "What is the id of the three-year old cat?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    13,
+                                    false
+                                ],
+                                null
+                            ],
+                            3.0,
+                            null
+                        ],
+                        "and",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"cat\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        11,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT * FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pet_age  =  3 AND T3.pettype  =  'cat'",
+                "utterance_toks": [
+                    "Who",
+                    "is",
+                    "the",
+                    "owner",
+                    "of",
+                    "that",
+                    "cat",
+                    "?"
+                ],
+                "utterance": "Who is the owner of that cat?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        1,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    9,
+                                    false
+                                ],
+                                null
+                            ],
+                            "and",
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        11,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    10,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    13,
+                                    false
+                                ],
+                                null
+                            ],
+                            3.0,
+                            null
+                        ],
+                        "and",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"cat\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT T1.lname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pet_age  =  3 AND T3.pettype  =  'cat'",
+                "utterance_toks": [
+                    "What",
+                    "is",
+                    "their",
+                    "last",
+                    "name",
+                    "?"
+                ],
+                "utterance": "What is their last name?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        1,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    9,
+                                    false
+                                ],
+                                null
+                            ],
+                            "and",
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        11,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    10,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    13,
+                                    false
+                                ],
+                                null
+                            ],
+                            3.0,
+                            null
+                        ],
+                        "and",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"cat\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        2,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT T1.lname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pet_age  =  3 AND T3.pettype  =  'cat'",
+            "utterance": "What is the last name of the student who has a cat that is 3 years old?"
+        }
+    },
+    {
+        "database_id": "pets_1",
+        "interaction": [
+            {
+                "query": "SELECT DISTINCT T1.Fname FROM student AS T1",
+                "utterance_toks": [
+                    "what",
+                    "is",
+                    "the",
+                    "first",
+                    "name",
+                    "of",
+                    "every",
+                    "student",
+                    "?"
+                ],
+                "utterance": "what is the first name of every student?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "having": [],
+                    "select": [
+                        true,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        3,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat'",
+                "utterance_toks": [
+                    "Of",
+                    "those",
+                    "names",
+                    ",",
+                    "which",
+                    "ones",
+                    "correspond",
+                    "to",
+                    "somebody",
+                    "who",
+                    "has",
+                    "a",
+                    "cat",
+                    "?"
+                ],
+                "utterance": "Of those names, which ones correspond to somebody who has a cat?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        1,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    9,
+                                    false
+                                ],
+                                null
+                            ],
+                            "and",
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        11,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    10,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"cat\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        true,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        3,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T3.pettype  =  'dog'",
+                "utterance_toks": [
+                    "Also",
+                    ",",
+                    "combine",
+                    "those",
+                    "names",
+                    "with",
+                    "those",
+                    "who",
+                    "have",
+                    "a",
+                    "dog",
+                    "."
+                ],
+                "utterance": "Also, combine those names with those who have a dog.",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                0
+                            ],
+                            [
+                                "table_unit",
+                                1
+                            ],
+                            [
+                                "table_unit",
+                                2
+                            ]
+                        ],
+                        "conds": [
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        1,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    9,
+                                    false
+                                ],
+                                null
+                            ],
+                            "and",
+                            [
+                                false,
+                                2,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        11,
+                                        false
+                                    ],
+                                    null
+                                ],
+                                [
+                                    0,
+                                    10,
+                                    false
+                                ],
+                                null
+                            ]
+                        ]
+                    },
+                    "union": null,
+                    "except": null,
+                    "groupBy": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"cat\"",
+                            null
+                        ],
+                        "or",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    12,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"dog\"",
+                            null
+                        ]
+                    ],
+                    "having": [],
+                    "select": [
+                        true,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        3,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT DISTINCT T1.Fname FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T3.petid  =  T2.petid WHERE T3.pettype  =  'cat' OR T3.pettype  =  'dog'",
+            "utterance": "What are the first names of every student who has a cat or dog as a pet?"
+        }
+    },
+    {
+        "database_id": "wta_1",
+        "interaction": [
+            {
+                "query": "SELECT count(*) FROM matches",
+                "utterance_toks": [
+                    "How",
+                    "many",
+                    "matches",
+                    "were",
+                    "played",
+                    "?"
+                ],
+                "utterance": "How many matches were played?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                3,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT count(*) FROM matches WHERE loser_hand = \"L\"",
+                "utterance_toks": [
+                    "How",
+                    "many",
+                    "where",
+                    "the",
+                    "loser",
+                    "hand",
+                    "is",
+                    "L",
+                    "?"
+                ],
+                "utterance": "How many where the loser hand is L?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    11,
+                                    false
+                                ],
+                                null
+                            ],
+                            "\"L\"",
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                3,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT count(*) FROM matches WHERE YEAR  =  2013 OR YEAR  =  2016",
+                "utterance_toks": [
+                    "How",
+                    "many",
+                    "played",
+                    "in",
+                    "year",
+                    "2013",
+                    "or",
+                    "2016",
+                    "?"
+                ],
+                "utterance": "How many played in year 2013 or 2016?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    38,
+                                    false
+                                ],
+                                null
+                            ],
+                            2013.0,
+                            null
+                        ],
+                        "or",
+                        [
+                            false,
+                            2,
+                            [
+                                0,
+                                [
+                                    0,
+                                    38,
+                                    false
+                                ],
+                                null
+                            ],
+                            2016.0,
+                            null
+                        ]
+                    ],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                3,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT count(*) FROM matches WHERE YEAR  =  2013 OR YEAR  =  2016",
+            "utterance": "List the number of all matches who played in years of 2013 or 2016."
+        },
+        "interaction_id": 3
+    },
+    {
+        "database_id": "poker_player",
+        "interaction": [
+            {
+                "query": "SELECT Nationality FROM people",
+                "utterance_toks": [
+                    "Show",
+                    "the",
+                    "nationality",
+                    "of",
+                    "each",
+                    "person",
+                    "."
+                ],
+                "utterance": "Show the nationality of each person.",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        8,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT * FROM people GROUP BY Nationality",
+                "utterance_toks": [
+                    "Group",
+                    "people",
+                    "by",
+                    "their",
+                    "nationality",
+                    "."
+                ],
+                "utterance": "Group people by their nationality.",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [
+                        [
+                            0,
+                            8,
+                            false
+                        ]
+                    ],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "query": "SELECT Nationality ,  COUNT(*) FROM people GROUP BY Nationality",
+                "utterance_toks": [
+                    "For",
+                    "each",
+                    "of",
+                    "the",
+                    "result",
+                    ",",
+                    "show",
+                    "the",
+                    "corresponding",
+                    "number",
+                    "of",
+                    "people",
+                    "of",
+                    "that",
+                    "nationality",
+                    "?"
+                ],
+                "utterance": "For each of the result, show the corresponding number of people of that nationality?",
+                "sql": {
+                    "orderBy": [],
+                    "from": {
+                        "table_units": [
+                            [
+                                "table_unit",
+                                1
+                            ]
+                        ],
+                        "conds": []
+                    },
+                    "union": null,
+                    "except": null,
+                    "having": [],
+                    "limit": null,
+                    "intersect": null,
+                    "where": [],
+                    "groupBy": [
+                        [
+                            0,
+                            8,
+                            false
+                        ]
+                    ],
+                    "select": [
+                        false,
+                        [
+                            [
+                                0,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        8,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ],
+                            [
+                                3,
+                                [
+                                    0,
+                                    [
+                                        0,
+                                        0,
+                                        false
+                                    ],
+                                    null
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ],
+        "final": {
+            "query": "SELECT Nationality ,  COUNT(*) FROM people GROUP BY Nationality",
+            "utterance": "What are different nationalities of people and the corresponding number of people from each nation?"
+        },
+        "interaction_id": 13
+    }
+]
