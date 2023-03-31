@@ -1,4 +1,4 @@
--- Test!
+-- This template will show you full potential of PML.
 
 {var:index1 = 0}
 {var:total = 0}
@@ -14,13 +14,13 @@ This is Print (total += data(~.random_int)): {print:total += data(~.random_int)}
  #这照样是注释
 
 Question (ABS): {data:incontext_samples.[index1].interaction.[0].utterance}
-Question (REL): {data:~.interaction.[0].utterance}      # 这还是注释
+Question (REL): {print:data(~.interaction.[0].utterance)}      # 这还是注释
 Question (REL)2: {data:~.interaction.[0].utterance}
 Answer: Let's think step by step.
 {loop:~.interaction}
 index == {calc:index}
 index1 == {calc:index1}
-Step {calc:index+index1} Question: {data:~.utterance}
+Step {print:index+index1} Question: {data:~.utterance}
 Step {calc:index-index1} SQL: {data:~.query}
 {end}
 According the analysis above, the final SQL is: {data:~.final.query}

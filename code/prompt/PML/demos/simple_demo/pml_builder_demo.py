@@ -1,6 +1,9 @@
 import json
 import os
+import random
 import sys
+ROOT_DIR = os.path.join(os.path.dirname(__file__), "../../")
+sys.path.append(ROOT_DIR)
 from pml_parser import PmlParser
 
 
@@ -26,6 +29,7 @@ query_samples = \
     "code": "print(\"Hello World!\")"
 }
 
+### String concatenation
 prompt = "-- Answer the following questions about the code snippet below.\n\n"
 count = 1
 for index, sample in enumerate(incontext_samples):
@@ -38,7 +42,8 @@ prompt += f"Question: Write a {query_samples['lang']} program that prints \"Hell
 prompt += f"Code:"
 #print(prompt)
 
-template:str = open(r"demo_template.txt", 'r', encoding='utf-8').read()
+### PML template
+template:str = open(r"demos\simple_demo\demo_template.pml", 'r', encoding='utf-8').read()
 apb = PmlParser(template)
 prompt = apb.build_prompt(incontext_samples=incontext_samples, query_samples=query_samples)
 print(prompt)
