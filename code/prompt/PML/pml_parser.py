@@ -123,7 +123,7 @@ class PmlParser():
                     # create a NEW word before the comment
                     # Give the white space before the comment to this NEW word
                     # and give the \n after the comment back to this NEW word
-                    if words_list[index-1]['word'][-1] != '\n': # type: ignore
+                    if words_list[index-1]['word'] == "" or words_list[index-1]['word'][-1] != '\n': # type: ignore
                         new_word = {'line':line_number, 'word':""} # type: ignore
                         words_list.insert(index, new_word)
                         index += 1
