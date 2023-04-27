@@ -48,7 +48,7 @@
 
 ```python
 {print:data(A.B.[2])}
-{print:(A.B.[0])};{print:data(A.B.[1])}
+{print:data(A.B.[0])};{print:data(A.B.[1])}
 ```
 
 处理后的 prompt 为
@@ -130,7 +130,7 @@
 ```python
 loop test
 {loop:~.A.B}
-data: {data:~.};
+data: {print:data(~.)};
 {end}
 over!
 ```
@@ -172,7 +172,7 @@ over!
 ```python
 loop test
 {loop:~.A.B}
-data {calc:index+1}: {data:~.};
+data {print:index+1}: {print:data(~.)};
 {end}
 over!
 ```
@@ -210,7 +210,7 @@ over!
 ```python
 length test
 {var:length = len(~.A.B)}
-len(~.A.B) == {calc:length*2}
+len(~.A.B) == {print:length*2}
 over!
 ```
 
@@ -234,7 +234,7 @@ over!
 
 ```python
 data() test
-40+37={calc:int(data(~.A.B)) + 37}
+40+37={print:int(data(~.A.B)) + 37}
 over!
 ```
 
@@ -294,7 +294,7 @@ prompt = apb.build_prompt(
 ```python
 loop test
 {loop:A.B}
-Question: {data:~.final.question};
+Question: {print:data(~.final.question)};
 {end}
 over!
 ```
@@ -308,10 +308,10 @@ loop test
 {var:global_index = 0}
 {loop:A.B}
 # 可以使用自己定义的全局变量
-Question: {data:A.B.[global_index].final.question};
+Question: {print:data(A.B.[global_index].final.question)};
 {var:global_index += 1}
 # 也可以使用内置的 index
-Question: {data:A.B.[index].final.question};
+Question: {print:data(A.B.[index].final.question)};
 {end}
 over!
 ```
