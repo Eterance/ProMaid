@@ -1,4 +1,4 @@
--- This template will show you full potential of PML.
+-- This template will show you full potential of ProMaid Language.
 
 {var:index1 = 0}
 {var:total = 0}

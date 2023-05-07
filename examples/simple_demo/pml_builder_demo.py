@@ -37,7 +37,7 @@ prompt += f"Code:"
 #print(prompt)
 
 ### PML template
-template:str = open(r"demos\simple_demo\demo_template.pml", 'r', encoding='utf-8').read()
+template:str = open(r"examples\simple_demo\demo_template.pml", 'r', encoding='utf-8').read()
 apb = PmlParser(template)
 prompt = apb.build_prompt(incontext_samples=incontext_samples, query_samples=query_samples)
 print(prompt)

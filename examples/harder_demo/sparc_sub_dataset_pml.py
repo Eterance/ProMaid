@@ -8,7 +8,7 @@ from ProMaid import PmlParser
 
 template_file  = os.path.join(ROOT_DIR, "examples\harder_demo\sparc_sub_dataset.pml")
 template:str = open(template_file, 'r', encoding='utf-8').read()
-with open('demos\harder_demo\sparc_dev_[389, 19, 141, 329, 344, 126, 59, 46, 199, 147].json') as file:
+with open('examples\harder_demo\sparc_dev_[389, 19, 141, 329, 344, 126, 59, 46, 199, 147].json') as file:
     test_data = json.load(file)
 apb = PmlParser(template, is_clean_whitespace_at_the_end_of_lines=True)
 
