@@ -1,5 +1,11 @@
 # ProMaid Language
 
+## 安装
+
+``` bash
+pip install promaid
+```
+
 ## 这有什么用？
 
 Prompt 的构建一般使用代码（如 Python） 的字符串拼接。
@@ -12,11 +18,9 @@ Prompt 的构建一般使用代码（如 Python） 的字符串拼接。
 
 使用 **ProMaid Language**（以下简称 **PML** ），你可以将 Template 的构建与主代码分离，并且能直观地构建它———事实上，写 PML 就是在写一个文本文件，而不是费力地做字符串拼接。
 
----
-
 ## 一个例子
 
-> 以下示例可以在文件 [pml_builder_demo.py](demos\simple_demo\pml_builder_demo.py) 中找到。
+> 以下示例可以在文件 [pml_builder_demo.py](examples\simple_demo\pml_builder_demo.py) 中找到。
 
 现在你手头有这样一份数据：
 
@@ -88,7 +92,7 @@ prompt += f"Code:"
 
 看起来并不是很直观。那么怎么改成使用 PML 呢？
 
-首先，构造 PML 文件。假设你将其保存到了 [demo_template.pml](demos\simple_demo\demo_template.pml) 中。
+首先，构造 PML 文件。假设你将其保存到了 [demo_template.pml](examples\simple_demo\demo_template.pml) 中。
 
 我们先弄一个上下文样本的枚举/循环：
 
@@ -130,47 +134,11 @@ Question: Write a {print:data(query_samples.lang)} program that prints "Hello Wo
 Code:
 ```
 
->有关 PML 的语法，请参阅 [PML 语法手册](PML语法手册.md)。
+>有关 PML 的语法，请参阅 [ProMaid 语法手册](docs\zh-cn\语法手册.md)。
 
-最后，运行 [pml_builder_demo.py](demos\simple_demo\pml_builder_demo.py)：
+最后，运行 [pml_builder_demo.py](examples\simple_demo\pml_builder_demo.py)：
 
 得到的 Prompt 应该和使用 Python 字符串拼接的一致。
-
----
-
-## 错误处理
-
-PML Parser 拥有完善的错误提示系统。
-
-为了演示如何处理错误，我们将上一步的 demo 中的 template 第 7 行的 `{print:data(~.lang)}` 改为 `{print:data(~.language)}`。
-
-```python
--- Answer the following questions about the code snippet below.
-
-{var:count=1}
-{loop:incontext_samples}
--- Question {print:index+1}
-
-Question: Write a {print:data(~.language)} program that prints "Hello World!" to the console.
-Code: {print:data(~.code)}
-
-{var:count+=1}
-{end}
--- Question {print:count}
-
-Question: Write a {print:data(query_samples.lang)} program that prints "Hello World!" to the console.
-Code:
-```
-
-运行 [pml_builder_demo.py](demos\simple_demo\pml_builder_demo.py) ，Python 控制台会提示类似下面的错误：
-
-```python
-PathNotFoundError at Line 7: Path "language" not found, error path "language", already found path ""
-```
-
-错误提示告诉我们，template 的第 7 行有误：找不到叫 `language` 的数据名称————实际上，正确的名称是 `lang`。
-
----
 
 ## PML Parser 怎么把 template 构建为 prompt 的？
 

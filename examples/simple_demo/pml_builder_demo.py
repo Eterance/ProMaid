@@ -1,10 +1,4 @@
-import json
-import os
-import random
-import sys
-ROOT_DIR = os.path.join(os.path.dirname(__file__), "../../")
-sys.path.append(ROOT_DIR)
-from pml_parser import PmlParser
+from ProMaid import PmlParser
 
 
 incontext_samples = \
