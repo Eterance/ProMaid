@@ -1,4 +1,4 @@
-from .pml_parser import PmlParser
+from .pml_parser import PmlParser as PmlParser
 from . import Errors
 
 
