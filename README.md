@@ -20,7 +20,7 @@ Prompt 的构建一般使用代码（如 Python） 的字符串拼接。
 
 ## 一个例子
 
-> 以下示例可以在文件 [pml_builder_demo.py](examples\simple_demo\pml_builder_demo.py) 中找到。
+> 以下示例可以在文件 [pml_builder_demo.py](examples/simple_demo/pml_builder_demo.py) 中找到。
 
 现在你手头有这样一份数据：
 
@@ -92,7 +92,7 @@ prompt += f"Code:"
 
 看起来并不是很直观。那么怎么改成使用 PML 呢？
 
-首先，构造 PML 文件。假设你将其保存到了 [demo_template.pml](examples\simple_demo\demo_template.pml) 中。
+首先，构造 PML 文件。假设你将其保存到了 [demo_template.pml](examples/simple_demo/demo_template.pml) 中。
 
 我们先弄一个上下文样本的枚举/循环：
 
@@ -134,9 +134,9 @@ Question: Write a {print:data(query_samples.lang)} program that prints "Hello Wo
 Code:
 ```
 
->有关 PML 的语法，请参阅 [ProMaid 语法手册](docs\zh-cn\语法手册.md)。
+>有关 PML 的语法，请参阅 [ProMaid 语法手册](docs/zh-cn/语法手册.md)。
 
-最后，运行 [pml_builder_demo.py](examples\simple_demo\pml_builder_demo.py)：
+最后，运行 [pml_builder_demo.py](examples/simple_demo/pml_builder_demo.py)：
 
 得到的 Prompt 应该和使用 Python 字符串拼接的一致。
 
