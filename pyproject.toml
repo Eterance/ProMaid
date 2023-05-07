@@ -7,4 +7,13 @@ name = "ProMaid"
 description = "A markup language that can fill data into prompt"
 readme = "README.md"
 keywords= ["Prompt", "Markup Language", "NLP", "AI", "GPT"]
+requires-python = ">=3.6"
 version = "0.1.0"
+authors = [
+    { name="Eterance"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
