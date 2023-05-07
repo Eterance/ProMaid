@@ -1,4 +1,4 @@
-# Prompt Markup Language（提示标记语言）
+# ProMaid Language
 
 ## 这有什么用？
 
@@ -10,7 +10,7 @@ Prompt 的构建一般使用代码（如 Python） 的字符串拼接。
 - 换行的处理非常麻烦；
 - 想要修改 Template 就要修改代码，一不小心容易改错。
 
-使用 **Prompt Markup Language**（以下简称 **PML** ），你可以将 Template 的构建与主代码分离，并且能直观地构建它———事实上，写 PML 就是在写一个文本文件，而不是费力地做字符串拼接。
+使用 **ProMaid Language**（以下简称 **PML** ），你可以将 Template 的构建与主代码分离，并且能直观地构建它———事实上，写 PML 就是在写一个文本文件，而不是费力地做字符串拼接。
 
 ---
 
@@ -169,7 +169,6 @@ PathNotFoundError at Line 7: Path "language" not found, error path "language", a
 ```
 
 错误提示告诉我们，template 的第 7 行有误：找不到叫 `language` 的数据名称————实际上，正确的名称是 `lang`。
-
 
 ---
 

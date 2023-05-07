@@ -1,0 +1,10 @@
+ [build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+    
+[project]
+name = "ProMaid"
+description = "A markup language that can fill data into prompt"
+readme = "README.md"
+keywords= ["Prompt", "Markup Language", "NLP", "AI", "GPT"]
+version = "0.1.0"

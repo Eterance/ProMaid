@@ -1,11 +1,7 @@
 from typing import Optional, Union
-import os
-import sys
 
-ROOT_DIR = os.path.join(os.path.dirname(__file__))
-sys.path.append(ROOT_DIR)
-from keyword_enum import KeywordEnum
-from errors import LoopKeywordUnpairedError
+from .keyword_enum import KeywordEnum
+from .errors import LoopKeywordUnpairedError
 
 
 DEFAULT_ERROR_VALUE = 2333

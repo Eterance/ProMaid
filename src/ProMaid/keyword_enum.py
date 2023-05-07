@@ -1,9 +1,4 @@
 from enum import Enum
-import os
-import sys
-ROOT_DIR = os.path.join(os.path.dirname(__file__))
-sys.path.append(ROOT_DIR)
-
 
 class KeywordEnum(Enum):
     Data:str = "data"

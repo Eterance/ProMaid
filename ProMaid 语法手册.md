@@ -1,4 +1,4 @@
-# Prompt Markup Language 语法手册
+# ProMaid Language 语法手册
 
 ## 标签
 
