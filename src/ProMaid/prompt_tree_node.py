@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
 from .keyword_enum import KeywordEnum
-from .errors import LoopKeywordUnpairedError
+from .Errors import LoopKeywordUnpairedError
 
 
 DEFAULT_ERROR_VALUE = 2333

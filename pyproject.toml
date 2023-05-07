@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
     
 [project]
-name = "ProMaid"
+name = "promaid"
 description = "A markup language that can fill data into prompt"
 readme = "README.md"
 keywords= ["Prompt", "Markup Language", "NLP", "AI", "GPT"]

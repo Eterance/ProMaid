@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 from .keyword_enum import KeywordEnum, ReservedWordEnum, TagPatternsEnum, FunctionPatternsEnum
 from .prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, PrintNode, LoopNode, NonTerminalNode, parse_children
-from .errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError, LoopPathNotListError, ImproperTypeDataInListSliceError
+from .Errors import AssignReadOnlyError, ExpressionEvaluationUnknownExceptionError, InvalidListIndexOrSlice, ListOutOfIndexError, PathNotFoundError, UnknownError, VariableReferenceError, ImproperTypeDataInExpressionError, LoopPathNotListError, ImproperTypeDataInListSliceError
 
 class PmlParser():
     def __init__(self, 
