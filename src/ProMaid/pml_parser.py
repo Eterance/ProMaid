@@ -1,7 +1,7 @@
 import copy
 from enum import Enum
 import re
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from .keyword_enum import KeywordEnum, ReservedWordEnum, TagPatternsEnum, FunctionPatternsEnum
 from .prompt_tree_node import AssignmentNode, BaseNode, DataNode, EmptyNode, CalculationNode, PrintNode, LoopNode, NonTerminalNode, parse_children
@@ -22,7 +22,7 @@ class PmlParser():
                 print(f'\033[0;33;40mNotices: Although PML parser can read almost any text file, it is recommended to use the special suffix ".pml" to name template files written in PML.\033[0m\n\033[0;36;40mCurrently read: {template_path}\033[0m')
         if self._template is None:
             raise ValueError("Template cannot be None.")
-        self._global_variable_dict:dict[str, Union[int, float]] = {}
+        self._global_variable_dict:dict[str, Any] = {}
         self._is_clean_whitespace = is_clean_whitespace_at_the_end_of_lines
         self._is_reserve_comments = is_reserve_comments
         self.template_tree = self._parse_syntax_tree()
@@ -493,7 +493,11 @@ class PmlParser():
         parse_children(root_node, decomposed_word_list)        
         return root_node
         
-    def build_prompt(self, **data):
+    def build_prompt(self, global_variables:dict[str, Any]|None = None):
         tree = copy.deepcopy(self.template_tree)
+        if global_variables is None:
+            self._global_variable_dict = {}
+        else:
+            self._global_variable_dict = global_variables
         self._fill_data_to_sub_trees(tree, data, data, None)
         return tree.PromptString
