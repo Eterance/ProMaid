@@ -1,5 +1,7 @@
 # ProMaid Language
 
+2023/05/23 更新： 欢迎使用功能更加强大的 [Pymaidol](https://github.com/Eterance/Pymaidol)！
+
 ## 安装
 
 ``` bash
